@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Espace client — SEND</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/main.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌐</text></svg>" />
+  <style>
+    .auth-wrap { min-height: 100vh; display: grid; place-items: center; padding: 40px 20px;
+      background: radial-gradient(60% 60% at 50% 0%, rgba(91,75,255,.10), transparent 60%); }
+    .auth-card { width: 100%; max-width: 420px; background: #fff; border: 1px solid var(--line);
+      border-radius: 18px; padding: 34px; box-shadow: var(--shadow-lg); }
+    .auth-card .brand { justify-content: center; margin-bottom: 8px; }
+    .auth-card h1 { font-size: 24px; text-align: center; margin: 6px 0 4px; }
+    .auth-sub { text-align: center; color: var(--muted); font-size: 14px; margin: 0 0 22px; }
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: var(--ink-soft); }
+    .field input { width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px;
+      font: inherit; font-size: 15px; background: #fbfbfe; }
+    .field input:focus { outline: 2px solid rgba(91,75,255,.35); border-color: var(--brand); }
+    .row-between { display: flex; justify-content: flex-end; margin: -6px 0 16px; }
+    .row-between a { font-size: 13px; color: var(--brand); }
+    .msg { font-size: 13.5px; padding: 10px 12px; border-radius: 8px; margin-bottom: 14px; }
+    .msg.err { background: rgba(255,93,108,.1); color: #c62b3b; border: 1px solid rgba(255,93,108,.25); }
+    .msg.info { background: rgba(22,163,74,.1); color: #157a3a; border: 1px solid rgba(22,163,74,.25); }
+    .msg.warn { background: rgba(255,176,32,.12); color: #8a5a00; border: 1px solid rgba(255,176,32,.3); }
+    .toggle-text { text-align: center; font-size: 14px; color: var(--muted); margin-top: 18px; }
+    .toggle-text a { color: var(--brand); font-weight: 600; }
+    .back { display: block; text-align: center; margin-top: 20px; font-size: 13px; color: var(--muted); }
+    .space-inner { text-align: center; }
+    .space-inner .badge-ok { display: inline-block; background: rgba(22,163,74,.12); color: #157a3a;
+      border-radius: 999px; padding: 5px 14px; font-size: 13px; font-weight: 600; margin-bottom: 14px; }
+    .space-actions { display: grid; gap: 10px; margin-top: 20px; }
+    code.small { background: var(--bg-soft); padding: 2px 6px; border-radius: 5px; font-size: 12.5px; }
+  </style>
+</head>
+<body>
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <a class="brand" href="../index.html"><span class="mark">S</span><span>SEND</span></a>
+
+      <!-- Notice si Supabase n'est pas encore configuré -->
+      <div id="notice" class="msg warn" hidden>
+        <strong>Connexion à configurer.</strong> Cette page est prête : il reste à
+        coller tes clés Supabase dans <code class="small">assets/js/config.js</code>
+        (voir le guide fourni). Une fois fait, la connexion par email fonctionnera ici.
+      </div>
+
+      <!-- Vue connexion / inscription -->
+      <div id="authView">
+        <h1 id="title">Espace client</h1>
+        <p class="auth-sub">Connectez-vous pour accéder à votre espace.</p>
+
+        <div id="formError" class="msg err" hidden></div>
+        <div id="formInfo" class="msg info" hidden></div>
+
+        <form id="authForm" novalidate>
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" type="email" autocomplete="email" required placeholder="vous@exemple.fr" />
+          </div>
+          <div class="field">
+            <label for="password">Mot de passe</label>
+            <input id="password" type="password" autocomplete="current-password" required minlength="6" placeholder="••••••••" />
+          </div>
+          <div class="row-between"><a href="#" id="forgot">Mot de passe oublié ?</a></div>
+          <button type="submit" id="submitBtn" class="btn btn-primary" style="width:100%;justify-content:center">Se connecter</button>
+        </form>
+
+        <p class="toggle-text" id="toggleText">Pas encore de compte ? <a href="#" id="toggleLink">Créer un compte</a></p>
+      </div>
+
+      <!-- Vue connectée -->
+      <div id="spaceView" hidden>
+        <div class="space-inner">
+          <span class="badge-ok">✓ Connecté</span>
+          <h1>Bonjour 👋</h1>
+          <p class="auth-sub">Vous êtes connecté avec <strong id="userEmail"></strong></p>
+          <p style="color:var(--muted);font-size:14px">Votre espace client est prêt. On pourra y ajouter vos projets, factures ou documents.</p>
+          <div class="space-actions">
+            <a href="../index.html" class="btn btn-ghost" style="justify-content:center">Retour au site</a>
+            <button id="logout" class="btn btn-primary" style="justify-content:center">Se déconnecter</button>
+          </div>
+        </div>
+      </div>
+
+      <a class="back" href="../index.html">← Retour à l'accueil</a>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/account.js"></script>
+</body>
+</html>
