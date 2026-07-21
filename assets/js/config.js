@@ -19,5 +19,5 @@ window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXB
 // (ex. "https://formspree.io/f/xxxxxxx") ci-dessous. Tant que c'est vide, les
 // formulaires enregistrent localement et affichent un message de démonstration.
 // ---------------------------------------------------------------------------
-window.FORMSPREE_ENDPOINT = "";
+window.FORMSPREE_ENDPOINT = "https://formspree.io/f/mkodzqql";
 
