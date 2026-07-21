@@ -57,36 +57,38 @@
     var s = ''; for (var i = 0; i < 5; i++) s += i < n ? '★' : '☆'; return s;
   }
 
-  function cardHtml(it) {
+  function cardHtml(it, idx) {
+    var d = 'detail.html?type=' + type + '&id=' + idx;
+    var titre = '<a href="' + d + '" style="color:inherit">' + it.titre + '</a>';
     if (cfg.kind === 'artisan') {
       return '<article class="rcard">' +
         '<div class="ric">' + it.e + '</div>' +
-        '<div class="rmain"><div class="rtop"><h3>' + it.titre + '</h3>' +
+        '<div class="rmain"><div class="rtop"><h3>' + titre + '</h3>' +
           (it.badge ? '<span class="pill ok">' + it.badge + '</span>' : '') +
           '<span class="pill">' + it.metier + '</span></div>' +
         '<div class="rdesc">' + it.desc + '</div>' +
-        '<div class="rmeta"><span>📍 <b>' + it.ville + '</b></span><span class="stars-sm">' + stars(it.note) + ' <b>' + it.note + '/5</b></span><span>' + it.avis + ' avis</span></div></div>' +
-        '<div class="rside"><a class="btn btn-hi" href="../compte/index.html">Contacter</a></div></article>';
+        '<div class="rmeta"><span>📍 <b>' + it.ville + '</b></span><span class="stars-sm">' + stars(it.note) + ' <b>' + it.note + '/5</b></span><span>' + it.avis + ' avis</span><a href="' + d + '" style="color:var(--hi);font-weight:600">Voir le profil →</a></div></div>' +
+        '<div class="rside"><a class="btn btn-hi" href="' + d + '">Contacter</a></div></article>';
     }
     if (cfg.kind === 'aide') {
       return '<article class="rcard">' +
         '<div class="ric">' + it.e + '</div>' +
-        '<div class="rmain"><div class="rtop"><h3>' + it.titre + '</h3>' +
+        '<div class="rmain"><div class="rtop"><h3>' + titre + '</h3>' +
           (it.tag ? '<span class="pill hi">' + it.tag + '</span>' : '') +
           '<span class="pill">' + it.metier + '</span></div>' +
         '<div class="rdesc">' + it.desc + '</div>' +
-        '<div class="rmeta"><span>🗺️ <b>' + it.ville + '</b></span><span>⏱️ ' + it.delai + '</span></div></div>' +
-        '<div class="rside"><span class="budget">' + it.budget + '</span><a class="btn btn-ghost" href="../compte/index.html">Vérifier l\'éligibilité</a></div></article>';
+        '<div class="rmeta"><span>🗺️ <b>' + it.ville + '</b></span><span>⏱️ ' + it.delai + '</span><a href="' + d + '" style="color:var(--hi);font-weight:600">En savoir plus →</a></div></div>' +
+        '<div class="rside"><span class="budget">' + it.budget + '</span><a class="btn btn-ghost" href="' + d + '">Détails</a></div></article>';
     }
     // offre (chantier / sous-traitance)
     return '<article class="rcard">' +
       '<div class="ric">' + it.e + '</div>' +
-      '<div class="rmain"><div class="rtop"><h3>' + it.titre + '</h3>' +
+      '<div class="rmain"><div class="rtop"><h3>' + titre + '</h3>' +
         (it.tag ? '<span class="pill hi">' + it.tag + '</span>' : '') +
         '<span class="pill">' + it.metier + '</span></div>' +
       '<div class="rdesc">' + it.desc + '</div>' +
-      '<div class="rmeta"><span>📍 <b>' + it.ville + '</b></span><span>⏱️ ' + it.delai + '</span></div></div>' +
-      '<div class="rside"><span class="budget">' + it.budget + '</span><a class="btn btn-hi" href="../compte/index.html">Répondre</a></div></article>';
+      '<div class="rmeta"><span>📍 <b>' + it.ville + '</b></span><span>⏱️ ' + it.delai + '</span><a href="' + d + '" style="color:var(--hi);font-weight:600">Voir le détail →</a></div></div>' +
+      '<div class="rside"><span class="budget">' + it.budget + '</span><a class="btn btn-hi" href="' + d + '">Répondre</a></div></article>';
   }
 
   function render() {
