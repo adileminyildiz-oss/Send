@@ -40,6 +40,9 @@ const jobs = new JobManager({ concurrency: parseInt(process.env.RENDER_CONCURREN
 const app = express();
 app.disable('x-powered-by');
 
+// Sonde de santé publique (avant l'auth) — utilisée par les hébergeurs (Render...).
+app.get('/healthz', (req, res) => res.status(200).json({ ok: true }));
+
 // --- Authentification interne (HTTP Basic) -------------------------------
 function timingSafeEqual(a, b) {
   // Comparaison à temps constant simplifiée (longueurs potentiellement égales).

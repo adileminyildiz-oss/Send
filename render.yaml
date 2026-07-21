@@ -1,0 +1,21 @@
+# Blueprint Render — déploiement en un clic depuis GitHub.
+# Sur https://render.com : New → Blueprint → sélectionne ce dépôt.
+# Render lit ce fichier, construit l'image Docker (avec ffmpeg) et lance l'app.
+services:
+  - type: web
+    name: generateur-video-pub
+    runtime: docker
+    plan: starter          # "starter" recommandé (le plan gratuit manque de RAM/CPU pour ffmpeg)
+    healthCheckPath: /healthz
+    envVars:
+      - key: APP_USER
+        value: aem
+      - key: APP_PASSWORD
+        sync: false        # à saisir dans le dashboard Render (non versionné)
+      - key: RENDER_CONCURRENCY
+        value: "1"
+      - key: MAX_FILE_MB
+        value: "25"
+      # Décommente pour activer l'IA image->vidéo :
+      # - key: REPLICATE_API_TOKEN
+      #   sync: false
