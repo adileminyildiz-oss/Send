@@ -138,6 +138,12 @@ export async function renderSlideshow({
     throw new Error(`Transition inconnue : ${transition}. Choix : ${[...XFADE_TRANSITIONS].join(', ')}`);
   }
   if (segments.length < 2) transition = 'none';
+  // Certains builds ffmpeg (anciens) n'ont pas le filtre xfade : on bascule
+  // proprement sur des coupes franches (concat) plutôt que d'échouer.
+  if (transition !== 'none' && !filters.has('xfade')) {
+    console.warn('⚠️  Ce build ffmpeg n\'a pas le filtre « xfade » : transitions désactivées (coupes franches).');
+    transition = 'none';
+  }
 
   const W = fmt.width;
   const H = fmt.height;

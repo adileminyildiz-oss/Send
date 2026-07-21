@@ -11,10 +11,29 @@
 
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
 
 function commandExists(cmd) {
   const probe = spawnSync(cmd, ['-version'], { stdio: 'ignore' });
   return probe.status === 0;
+}
+
+// ffmpeg embarqué via un paquet npm (installé avec le projet), pour éviter toute
+// installation manuelle. On privilégie ffmpeg-static (build moderne, filtre
+// xfade présent) puis @ffmpeg-installer (installation npm très fiable mais plus
+// ancienne — les transitions xfade sont alors désactivées automatiquement).
+function bundledFfmpeg() {
+  try {
+    const p = require('ffmpeg-static');
+    if (p && existsSync(p)) return p;
+  } catch { /* paquet absent */ }
+  try {
+    const f = require('@ffmpeg-installer/ffmpeg');
+    if (f?.path && existsSync(f.path)) return f.path;
+  } catch { /* paquet absent */ }
+  return null;
 }
 
 // Tente de récupérer le binaire fourni par imageio-ffmpeg (si python + paquet présents).
@@ -45,11 +64,14 @@ export function resolveFfmpeg(explicit) {
     return process.env.FFMPEG_BIN;
   }
   if (commandExists('ffmpeg')) return 'ffmpeg';
-  const bundled = imageioFfmpeg();
+  const bundled = bundledFfmpeg();
   if (bundled) return bundled;
+  const io = imageioFfmpeg();
+  if (io) return io;
 
   throw new Error(
-    'ffmpeg est introuvable. Installe-le (https://ffmpeg.org/download.html), ' +
+    'ffmpeg est introuvable. Fais « npm ci » (il embarque ffmpeg), ' +
+      'ou installe-le (https://ffmpeg.org/download.html), ' +
       'ou définis la variable FFMPEG_BIN, ou passe --ffmpeg <chemin>.',
   );
 }
