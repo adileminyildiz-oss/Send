@@ -161,9 +161,9 @@
       <p class="msg" id="scoreMsg">Ajoutez vos premières pièces pour construire votre dossier.</p>
     </div>
 
-    <div class="demo-note">
+    <div class="demo-note" id="storeNote">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-      <div><b>Démo :</b> vos fichiers ne sont pas encore envoyés sur un serveur. Le stockage sécurisé des pièces (Supabase Storage) sera branché à l'étape suivante. Seules les informations (nom du fichier, échéance) sont mémorisées dans ce navigateur.</div>
+      <div id="storeNoteText">Vérification du stockage sécurisé…</div>
     </div>
 
     <div class="doclist" id="doclist"></div>
@@ -190,9 +190,13 @@
     { id: 'identite',  icon: '🪪', name: 'Pièce d\'identité du dirigeant',      opt: false, expiry: false, desc: "Carte d'identité ou passeport en cours de validité." }
   ];
 
+  var BUCKET = 'conformite';   // bucket Supabase Storage (privé) à créer côté Supabase
+
   var $ = function (id) { return document.getElementById(id); };
   var configGate = $('configGate'), authGate = $('authGate'), manager = $('manager');
   var client = null, user = null, storeKey = null;
+  var state = {};              // métadonnées en mémoire { docId: {fileName, added, expiry, path} }
+  var remoteOk = false;        // true si le bucket Storage répond (fichiers réellement envoyés)
 
   // --- Détection Supabase ---
   if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY || !window.supabase) {
@@ -207,14 +211,58 @@
     $('userEmail').textContent = user.email || '—';
     $('avatar').textContent = (user.email || '?').charAt(0).toUpperCase();
     render();
+    initData();
   }
 
-  // --- Stockage local par utilisateur ---
-  function load() {
-    try { return JSON.parse(localStorage.getItem(storeKey)) || {}; }
-    catch (e) { return {}; }
+  // --- Chemins Storage ---
+  function metaPath() { return user.id + '/_meta.json'; }
+  function extOf(name) { var m = /\.([a-z0-9]+)$/i.exec(name || ''); return m ? m[1].toLowerCase() : 'bin'; }
+
+  // --- Cache local (repli + accélération) ---
+  function loadLocal() { try { return JSON.parse(localStorage.getItem(storeKey)) || {}; } catch (e) { return {}; } }
+  function saveLocal(data) { try { localStorage.setItem(storeKey, JSON.stringify(data)); } catch (e) {} }
+
+  function setNote(mode) {
+    var el = $('storeNoteText'); if (!el) return;
+    if (mode === 'ok') {
+      el.innerHTML = '<b>Stockage sécurisé actif :</b> vos pièces sont envoyées et chiffrées sur votre espace Supabase, accessibles depuis n\'importe quel appareil. Vous seul pouvez les consulter.';
+    } else {
+      el.innerHTML = '<b>Stockage local uniquement :</b> le bucket « ' + BUCKET + ' » n\'est pas encore créé dans Supabase, vos fichiers restent donc sur cet appareil. Créez un bucket privé nommé « ' + BUCKET + ' » (Supabase → Storage) pour activer l\'envoi réel.';
+    }
   }
-  function save(data) { localStorage.setItem(storeKey, JSON.stringify(data)); }
+
+  // --- Chargement des métadonnées (Storage si dispo, sinon local) ---
+  function initData() {
+    var local = loadLocal();
+    client.storage.from(BUCKET).download(metaPath()).then(function (res) {
+      if (res && res.error) throw res.error;
+      remoteOk = true; setNote('ok');
+      if (res && res.data) {
+        return res.data.text().then(function (t) {
+          try { state = JSON.parse(t) || {}; } catch (e) { state = local; }
+          saveLocal(state); render();
+        });
+      }
+    }).catch(function (err) {
+      // 400/404 « Object not found » = bucket OK mais pas encore de méta -> on reste en remote
+      var msg = (err && (err.message || err.error || '')) + '';
+      if (/not found|does not exist|The resource was not found/i.test(msg) && !/bucket/i.test(msg)) {
+        remoteOk = true; setNote('ok'); state = local; render();
+      } else {
+        remoteOk = false; setNote('local'); state = local; render();
+      }
+    });
+  }
+
+  // --- Persistance des métadonnées ---
+  function persist() {
+    saveLocal(state);
+    if (!remoteOk) return Promise.resolve();
+    var blob = new Blob([JSON.stringify(state)], { type: 'application/json' });
+    return client.storage.from(BUCKET).upload(metaPath(), blob, { upsert: true, contentType: 'application/json' })
+      .then(function (res) { if (res && res.error) throw res.error; })
+      .catch(function () { /* silencieux : le cache local a déjà été écrit */ });
+  }
 
   // --- Calcul du statut d'un document ---
   var DAY = 86400000;
@@ -238,7 +286,7 @@
 
   // --- Rendu de la liste + score ---
   function render() {
-    var data = load();
+    var data = state;
     var required = DOCS.filter(function (d) { return !d.opt; });
     var doneReq = 0;
     required.forEach(function (d) { if (statusOf(data[d.id]).done) doneReq++; });
@@ -275,6 +323,7 @@
           '<div class="side">' +
             '<span class="badge ' + st.cls + '">' + st.label + '</span>' +
             '<div class="actions">' +
+              (rec && rec.path ? '<button class="btn btn-ghost btn-sm" data-act="view">Voir</button>' : '') +
               '<button class="btn btn-hi btn-sm" data-act="edit">' + (rec && rec.fileName ? 'Mettre à jour' : 'Ajouter') + '</button>' +
               (rec && rec.fileName ? '<button class="btn btn-ghost btn-sm" data-act="remove">Retirer</button>' : '') +
             '</div>' +
@@ -309,25 +358,84 @@
       docEl.classList.toggle('editing');
     } else if (act === 'cancel') {
       docEl.classList.remove('editing');
+    } else if (act === 'view') {
+      viewDoc(id, btn);
     } else if (act === 'remove') {
-      var data = load(); delete data[id]; save(data); render();
+      removeDoc(id);
     } else if (act === 'saveDoc') {
-      var fileInput = docEl.querySelector('[data-file]');
-      var expInput = docEl.querySelector('[data-expiry]');
-      var data = load();
-      var existing = data[id] || {};
-      var fileName = (fileInput && fileInput.files && fileInput.files[0]) ? fileInput.files[0].name : existing.fileName;
-      if (!fileName) { if (fileInput) fileInput.focus(); return; }
-      data[id] = {
-        fileName: fileName,
-        added: existing.added || new Date().toISOString().slice(0, 10),
-        expiry: (meta && meta.expiry && expInput) ? (expInput.value || '') : ''
-      };
-      save(data);
-      docEl.classList.remove('editing');
-      render();
+      saveDoc(id, meta, docEl, btn);
     }
   });
+
+  // --- Ouvrir un document (URL signée temporaire) ---
+  function viewDoc(id, btn) {
+    var rec = state[id];
+    if (!rec || !rec.path) return;
+    var old = btn.textContent; btn.textContent = '…'; btn.disabled = true;
+    client.storage.from(BUCKET).createSignedUrl(rec.path, 300).then(function (res) {
+      btn.textContent = old; btn.disabled = false;
+      if (res && res.data && res.data.signedUrl) window.open(res.data.signedUrl, '_blank', 'noopener');
+      else alert("Impossible d'ouvrir le document pour le moment.");
+    }).catch(function () { btn.textContent = old; btn.disabled = false; alert("Impossible d'ouvrir le document."); });
+  }
+
+  // --- Retirer un document (fichier + métadonnée) ---
+  function removeDoc(id) {
+    var rec = state[id];
+    var path = rec && rec.path;
+    delete state[id];
+    render();
+    persist();
+    if (remoteOk && path) client.storage.from(BUCKET).remove([path]).catch(function () {});
+  }
+
+  // --- Enregistrer / envoyer un document ---
+  function saveDoc(id, meta, docEl, btn) {
+    var fileInput = docEl.querySelector('[data-file]');
+    var expInput = docEl.querySelector('[data-expiry]');
+    var existing = state[id] || {};
+    var file = (fileInput && fileInput.files && fileInput.files[0]) ? fileInput.files[0] : null;
+    var fileName = file ? file.name : existing.fileName;
+    if (!fileName) { if (fileInput) fileInput.focus(); return; }
+    var expiry = (meta && meta.expiry && expInput) ? (expInput.value || '') : '';
+
+    function commit(path) {
+      state[id] = {
+        fileName: fileName,
+        added: existing.added || new Date().toISOString().slice(0, 10),
+        expiry: expiry,
+        path: path || existing.path || null
+      };
+      docEl.classList.remove('editing');
+      render();
+      persist();
+    }
+
+    // Pas de nouveau fichier : on met simplement à jour l'échéance
+    if (!file) { commit(existing.path); return; }
+
+    // Envoi réel vers Supabase Storage si disponible
+    if (remoteOk) {
+      var path = user.id + '/' + id + '.' + extOf(file.name);
+      btn.textContent = 'Envoi…'; btn.disabled = true;
+      client.storage.from(BUCKET).upload(path, file, { upsert: true, contentType: file.type || undefined })
+        .then(function (res) {
+          if (res && res.error) throw res.error;
+          btn.textContent = 'Enregistrer'; btn.disabled = false;
+          // si l'extension a changé, on retire l'ancien fichier
+          if (existing.path && existing.path !== path) client.storage.from(BUCKET).remove([existing.path]).catch(function () {});
+          commit(path);
+        })
+        .catch(function (err) {
+          btn.textContent = 'Enregistrer'; btn.disabled = false;
+          remoteOk = false; setNote('local');
+          alert("L'envoi sur le serveur a échoué (bucket « " + BUCKET + " » manquant ou droits insuffisants). Le document est conservé localement.\n\nDétail : " + ((err && err.message) || 'inconnu'));
+          commit(null);
+        });
+    } else {
+      commit(null);
+    }
+  }
 
   $('logout').addEventListener('click', function () {
     client.auth.signOut();
@@ -338,9 +446,11 @@
     if (session && session.user) {
       user = session.user;
       storeKey = 'batilink_docs_' + user.id;
+      state = loadLocal();
       showManager();
     } else {
       user = null;
+      state = {};
       showGate();
     }
   }
