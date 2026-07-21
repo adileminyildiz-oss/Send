@@ -137,7 +137,20 @@
         '<div class="dtags">'+tag(it.tag||it.badge, it.badge?'ok':'hi')+'<span class="pill">'+it.metier+'</span><span class="pill">📍 '+it.ville+'</span></div>'+
       '</div></div>'+ body +
       '<a href="index.html?type='+type+'" style="color:var(--hi);font-weight:600;font-size:14px">← Retour aux résultats</a>'+
-    '</div><aside class="aside">'+ aside +'</aside></div>';
+    '</div><aside class="aside">'+ aside +'<button class="btn btn-ghost" id="favBtn" style="width:100%;margin-top:8px"></button></aside></div>';
+
+  // Favoris (partagés avec l'espace client)
+  if (window.BLFav) {
+    var favBtn = document.getElementById('favBtn');
+    var favObj = { type: type, id: id, titre: it.titre, metier: it.metier, ville: it.ville };
+    var paintFav = function () {
+      var on = window.BLFav.has(type, id);
+      favBtn.textContent = on ? '★ Enregistré — retirer' : '☆ Sauvegarder dans mes favoris';
+      favBtn.classList.toggle('btn-hi', on); favBtn.classList.toggle('btn-ghost', !on);
+    };
+    favBtn.addEventListener('click', function () { window.BLFav.toggle(favObj); paintFav(); });
+    paintFav();
+  }
 })();
 </script>
 </body>
