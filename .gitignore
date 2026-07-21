@@ -1,0 +1,27 @@
+# Dépendances
+node_modules/
+
+# Sorties vidéo générées
+output/*.mp4
+output/*.mov
+output/*.webm
+
+# Fichiers temporaires de rendu
+.tmp/
+tmp/
+*.tmp
+
+# Médias utilisateur (photos/musique) — on ne versionne pas les assets lourds
+photos/*
+!photos/.gitkeep
+!photos/README.md
+music/*
+!music/.gitkeep
+
+# Secrets / config locale
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db

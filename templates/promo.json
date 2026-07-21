@@ -1,0 +1,17 @@
+{
+  "name": "promo",
+  "description": "Pub dynamique et rythmée (promo produit, soldes). Vertical, transitions marquées.",
+  "format": "9:16",
+  "fps": 30,
+  "slideDuration": 2.2,
+  "transition": "slideleft",
+  "transitionDuration": 0.5,
+  "kenburns": true,
+  "kenburnsIntensity": 0.14,
+  "musicVolume": 0.85,
+  "audioFadeOut": 1.5,
+  "font": "Sans",
+  "titleColor": "#FFFFFF",
+  "titleOutline": "#111111",
+  "fontSize": 70
+}

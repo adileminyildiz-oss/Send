@@ -1,0 +1,27 @@
+{
+  "name": "ad-video-generator",
+  "version": "0.1.0",
+  "description": "Génère des vidéos publicitaires (MP4) à partir d'un dossier de photos : montage local ffmpeg (Ken Burns, transitions, textes, musique) + option IA image→vidéo.",
+  "type": "module",
+  "bin": {
+    "generate-ad": "bin/generate-ad.js"
+  },
+  "scripts": {
+    "start": "node bin/generate-ad.js",
+    "example": "node bin/generate-ad.js photos --template promo --output output/example.mp4"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "video",
+    "ffmpeg",
+    "advertising",
+    "slideshow",
+    "ken-burns",
+    "publicite",
+    "montage"
+  ],
+  "license": "MIT",
+  "dependencies": {}
+}

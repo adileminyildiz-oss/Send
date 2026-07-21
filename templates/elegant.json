@@ -1,0 +1,17 @@
+{
+  "name": "elegant",
+  "description": "Pub haut de gamme, posée et fluide (immobilier, mode, restauration). Fondus doux.",
+  "format": "16:9",
+  "fps": 30,
+  "slideDuration": 4.0,
+  "transition": "fade",
+  "transitionDuration": 1.0,
+  "kenburns": true,
+  "kenburnsIntensity": 0.08,
+  "musicVolume": 0.7,
+  "audioFadeOut": 2.5,
+  "font": "Serif",
+  "titleColor": "#FFFFFF",
+  "titleOutline": "#000000",
+  "fontSize": 58
+}
