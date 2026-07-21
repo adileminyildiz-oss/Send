@@ -10,5 +10,5 @@
 // pour être exposée côté navigateur. La vraie sécurité se règle dans Supabase
 // (Row Level Security). Ne colle JAMAIS ici la clé « service_role » (secrète).
 // ---------------------------------------------------------------------------
-window.SUPABASE_URL = "";       // ex : "https://abcdefgh.supabase.co"
-window.SUPABASE_ANON_KEY = "";  // ex : "eyJhbGciOiJI..."
+window.SUPABASE_URL = "https://kneexwqmlgqdwferckkq.supabase.co";
+window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtuZWV4d3FtbGdxZHdmZXJja2txIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2MzY5MzEsImV4cCI6MjEwMDIxMjkzMX0.gVA95To1dOX_o9BpSFWCoj_5R-OqYsdIROzjLzkqvA4";
