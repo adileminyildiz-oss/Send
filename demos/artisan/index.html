@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dupont Plomberie — Plombier-chauffagiste à Valmont | Dépannage 24/7</title>
+<meta name="description" content="Dupont Plomberie, votre plombier-chauffagiste de confiance à Valmont. Dépannage urgence 24h/24, installation, chauffe-eau, salle de bain. Devis gratuit.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔧</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bleu-fonce:#0a2540;
+    --bleu:#1565c0;
+    --bleu-clair:#e8f1fb;
+    --bleu-mid:#4a90d9;
+    --accent:#ff7a00;
+    --accent-fonce:#e56b00;
+    --vert:#12a150;
+    --gris:#5a6b7b;
+    --gris-clair:#f4f7fa;
+    --blanc:#ffffff;
+    --ombre:0 10px 30px rgba(10,37,64,.08);
+    --ombre-fort:0 18px 45px rgba(10,37,64,.14);
+    --rayon:16px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    color:var(--bleu-fonce);
+    background:var(--blanc);
+    line-height:1.6;
+    overflow-x:hidden;
+  }
+  h1,h2,h3,.font-title{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;letter-spacing:-.02em;line-height:1.15}
+  a{text-decoration:none;color:inherit}
+  img{max-width:100%}
+  .wrap{max-width:1160px;margin:0 auto;padding:0 22px}
+  section{padding:78px 0}
+  .eyebrow{color:var(--bleu);font-weight:700;text-transform:uppercase;letter-spacing:.09em;font-size:.82rem;margin-bottom:12px;display:block}
+  h2.sec-title{font-size:2.15rem;margin-bottom:14px}
+  .sec-intro{color:var(--gris);max-width:620px;font-size:1.06rem;margin-bottom:44px}
+  .center{text-align:center}
+  .center .sec-intro{margin-left:auto;margin-right:auto}
+
+  /* Boutons */
+  .btn{display:inline-flex;align-items:center;gap:9px;padding:14px 26px;border-radius:999px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;font-size:1rem;border:none;cursor:pointer;transition:.22s ease;white-space:nowrap}
+  .btn-accent{background:var(--accent);color:#fff;box-shadow:0 8px 22px rgba(255,122,0,.35)}
+  .btn-accent:hover{background:var(--accent-fonce);transform:translateY(-2px);box-shadow:0 12px 28px rgba(255,122,0,.45)}
+  .btn-blue{background:var(--bleu);color:#fff;box-shadow:0 8px 22px rgba(21,101,192,.3)}
+  .btn-blue:hover{background:var(--bleu-fonce);transform:translateY(-2px)}
+  .btn-ghost{background:rgba(255,255,255,.14);color:#fff;border:1.5px solid rgba(255,255,255,.5)}
+  .btn-ghost:hover{background:rgba(255,255,255,.24);transform:translateY(-2px)}
+
+  /* Ruban démo */
+  .demo-ribbon{
+    position:fixed;bottom:16px;right:16px;z-index:1200;
+    background:var(--bleu-fonce);color:#fff;
+    padding:9px 15px;border-radius:999px;
+    font-size:.82rem;display:flex;align-items:center;gap:10px;
+    box-shadow:0 8px 24px rgba(0,0,0,.28);
+    border:1px solid rgba(255,255,255,.14);
+  }
+  .demo-ribbon a{background:var(--accent);color:#fff;padding:5px 12px;border-radius:999px;font-weight:700;font-size:.78rem;transition:.2s}
+  .demo-ribbon a:hover{background:var(--accent-fonce)}
+  .demo-ribbon .dr-txt{opacity:.9}
+
+  /* Header */
+  header{position:sticky;top:0;z-index:1000;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-bottom:1px solid #e6edf4;box-shadow:0 2px 14px rgba(10,37,64,.04)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:74px}
+  .logo{display:flex;align-items:center;gap:11px;font-family:'Plus Jakarta Sans';font-weight:800;font-size:1.24rem;color:var(--bleu-fonce)}
+  .logo .mark{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--bleu),var(--bleu-mid));display:grid;place-items:center;font-size:1.3rem;box-shadow:0 6px 16px rgba(21,101,192,.3)}
+  .logo small{display:block;font-size:.68rem;font-weight:600;color:var(--gris);letter-spacing:.04em;font-family:'Inter'}
+  .nav-links{display:flex;align-items:center;gap:30px;list-style:none}
+  .nav-links a{font-weight:600;font-size:.96rem;color:var(--bleu-fonce);transition:.2s}
+  .nav-links a:hover{color:var(--bleu)}
+  .nav-cta{display:flex;align-items:center;gap:14px}
+  .phone-btn{display:inline-flex;align-items:center;gap:9px;background:var(--accent);color:#fff;padding:11px 20px;border-radius:999px;font-weight:800;font-family:'Plus Jakarta Sans';box-shadow:0 8px 20px rgba(255,122,0,.35);transition:.22s}
+  .phone-btn:hover{background:var(--accent-fonce);transform:translateY(-2px)}
+  .burger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:8px}
+  .burger span{width:26px;height:3px;background:var(--bleu-fonce);border-radius:3px;transition:.3s}
+
+  /* Hero */
+  .hero{position:relative;background:linear-gradient(135deg,#0a2540 0%,#123a63 55%,#1565c0 100%);color:#fff;overflow:hidden;padding:96px 0 108px}
+  .hero::before{content:"";position:absolute;top:-140px;right:-120px;width:520px;height:520px;background:radial-gradient(circle,rgba(74,144,217,.5),transparent 62%);border-radius:50%}
+  .hero::after{content:"";position:absolute;bottom:-160px;left:-100px;width:460px;height:460px;background:radial-gradient(circle,rgba(255,122,0,.22),transparent 62%);border-radius:50%}
+  .hero .wrap{position:relative;z-index:2;display:grid;grid-template-columns:1.15fr .85fr;gap:56px;align-items:center}
+  .hero-pill{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.24);padding:7px 15px;border-radius:999px;font-size:.85rem;font-weight:600;margin-bottom:22px}
+  .hero h1{font-size:3.15rem;margin-bottom:20px}
+  .hero h1 .hl{color:#ffb066}
+  .hero p.lead{font-size:1.2rem;opacity:.92;margin-bottom:32px;max-width:540px}
+  .hero-btns{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:34px}
+  .badges{display:flex;gap:26px;flex-wrap:wrap}
+  .badge{display:flex;align-items:center;gap:9px;font-weight:600;font-size:.95rem}
+  .badge .ic{width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.14);display:grid;place-items:center;font-size:1rem}
+
+  /* Carte flottante hero */
+  .hero-card{background:#fff;color:var(--bleu-fonce);border-radius:22px;padding:30px;box-shadow:var(--ombre-fort)}
+  .hero-card .hc-top{display:flex;align-items:center;gap:13px;padding-bottom:18px;border-bottom:1px solid #eef2f6;margin-bottom:18px}
+  .hero-card .hc-av{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--vert),#0d8a44);display:grid;place-items:center;font-size:1.5rem;flex-shrink:0}
+  .hero-card .hc-top b{font-family:'Plus Jakarta Sans';font-size:1.05rem}
+  .hero-card .hc-top span{color:var(--gris);font-size:.86rem}
+  .hc-row{display:flex;align-items:center;gap:11px;padding:9px 0;font-size:.96rem}
+  .hc-row .chk{color:var(--vert);font-weight:800}
+  .hc-cta{margin-top:20px;background:var(--gris-clair);border-radius:12px;padding:15px;text-align:center}
+  .hc-cta .num{font-family:'Plus Jakarta Sans';font-weight:800;font-size:1.5rem;color:var(--bleu);letter-spacing:.01em}
+  .hc-cta small{color:var(--gris);font-size:.82rem}
+
+  /* Bandeau urgence */
+  .urgence{background:var(--accent);color:#fff;padding:0}
+  .urgence .wrap{display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap;padding:20px 22px}
+  .urgence .pulse{width:13px;height:13px;background:#fff;border-radius:50%;box-shadow:0 0 0 rgba(255,255,255,.7);animation:pulse 1.8s infinite;flex-shrink:0}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,.7)}70%{box-shadow:0 0 0 14px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
+  .urgence b{font-family:'Plus Jakarta Sans';font-size:1.15rem}
+  .urgence a.u-call{background:#fff;color:var(--accent-fonce);padding:10px 22px;border-radius:999px;font-weight:800;font-family:'Plus Jakarta Sans';transition:.2s}
+  .urgence a.u-call:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.2)}
+
+  /* Services */
+  .grid-services{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .service{background:#fff;border:1px solid #e9eef4;border-radius:var(--rayon);padding:30px 26px;transition:.25s;position:relative;overflow:hidden}
+  .service::before{content:"";position:absolute;top:0;left:0;width:100%;height:4px;background:linear-gradient(90deg,var(--bleu),var(--bleu-mid));transform:scaleX(0);transform-origin:left;transition:.3s}
+  .service:hover{transform:translateY(-6px);box-shadow:var(--ombre-fort);border-color:transparent}
+  .service:hover::before{transform:scaleX(1)}
+  .service .s-ic{width:60px;height:60px;border-radius:15px;background:var(--bleu-clair);display:grid;place-items:center;font-size:1.8rem;margin-bottom:18px}
+  .service h3{font-size:1.22rem;margin-bottom:9px}
+  .service p{color:var(--gris);font-size:.96rem}
+
+  /* Zone d'intervention */
+  .zone{background:var(--gris-clair)}
+  .zone-grid{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:center}
+  .zone-map{background:linear-gradient(135deg,#123a63,#1565c0);border-radius:22px;padding:44px;color:#fff;position:relative;overflow:hidden;box-shadow:var(--ombre)}
+  .zone-map::after{content:"📍";position:absolute;font-size:8rem;opacity:.1;bottom:-10px;right:6px}
+  .zone-map h3{font-size:1.5rem;margin-bottom:10px}
+  .zone-map p{opacity:.9;margin-bottom:22px}
+  .zone-map .rad{display:inline-flex;align-items:center;gap:9px;background:rgba(255,255,255,.14);padding:10px 18px;border-radius:999px;font-weight:600}
+  .villes{display:flex;flex-wrap:wrap;gap:12px}
+  .ville{background:#fff;border:1px solid #e3ebf3;padding:11px 18px;border-radius:999px;font-weight:600;font-size:.95rem;display:flex;align-items:center;gap:8px;box-shadow:0 3px 10px rgba(10,37,64,.04);transition:.2s}
+  .ville:hover{border-color:var(--bleu);color:var(--bleu);transform:translateY(-2px)}
+  .ville .dot{width:8px;height:8px;border-radius:50%;background:var(--vert)}
+
+  /* Avis */
+  .avis-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .avis{background:#fff;border:1px solid #e9eef4;border-radius:var(--rayon);padding:28px;box-shadow:var(--ombre);transition:.25s}
+  .avis:hover{transform:translateY(-5px);box-shadow:var(--ombre-fort)}
+  .stars{color:#ffb200;font-size:1.1rem;letter-spacing:2px;margin-bottom:14px}
+  .avis p{color:#33475a;font-style:italic;margin-bottom:20px}
+  .avis .who{display:flex;align-items:center;gap:12px}
+  .avis .who .av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-family:'Plus Jakarta Sans'}
+  .avis .who b{display:block;font-family:'Plus Jakarta Sans';font-size:.98rem}
+  .avis .who span{color:var(--gris);font-size:.85rem}
+  .rating-top{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:44px;flex-wrap:wrap}
+  .rating-top .big{font-family:'Plus Jakarta Sans';font-weight:800;font-size:2.4rem;color:var(--bleu-fonce)}
+  .rating-top .sub{color:var(--gris);font-size:.95rem}
+
+  /* Pourquoi nous */
+  .why{background:var(--bleu-fonce);color:#fff}
+  .why-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+  .why-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:var(--rayon);padding:32px 28px;transition:.25s}
+  .why-card:hover{background:rgba(255,255,255,.09);transform:translateY(-5px)}
+  .why-card .w-ic{width:58px;height:58px;border-radius:15px;background:linear-gradient(135deg,var(--accent),var(--accent-fonce));display:grid;place-items:center;font-size:1.6rem;margin-bottom:18px;box-shadow:0 8px 20px rgba(255,122,0,.3)}
+  .why-card h3{font-size:1.25rem;margin-bottom:10px}
+  .why-card p{opacity:.82;font-size:.97rem}
+  .stats-row{display:flex;justify-content:center;gap:60px;flex-wrap:wrap;margin-top:56px;padding-top:44px;border-top:1px solid rgba(255,255,255,.12)}
+  .stat{text-align:center}
+  .stat b{display:block;font-family:'Plus Jakarta Sans';font-weight:800;font-size:2.5rem;color:#ffb066}
+  .stat span{opacity:.8;font-size:.92rem}
+
+  /* Devis formulaire */
+  .devis-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:52px;align-items:center}
+  .devis-left h2{font-size:2.15rem;margin-bottom:16px}
+  .devis-left p{color:var(--gris);font-size:1.06rem;margin-bottom:26px}
+  .devis-left .li{display:flex;align-items:center;gap:13px;margin-bottom:16px;font-weight:500}
+  .devis-left .li .ic{width:40px;height:40px;border-radius:11px;background:var(--bleu-clair);display:grid;place-items:center;font-size:1.15rem;flex-shrink:0}
+  form.devis{background:#fff;border:1px solid #e6edf4;border-radius:22px;padding:34px;box-shadow:var(--ombre-fort)}
+  form.devis h3{font-size:1.3rem;margin-bottom:6px}
+  form.devis .fsub{color:var(--gris);font-size:.92rem;margin-bottom:22px}
+  .field{margin-bottom:16px}
+  .field label{display:block;font-weight:600;font-size:.9rem;margin-bottom:7px}
+  .field input,.field select,.field textarea{width:100%;padding:13px 15px;border:1.5px solid #dde5ee;border-radius:11px;font-family:inherit;font-size:.97rem;color:var(--bleu-fonce);transition:.2s;background:#fbfcfe}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--bleu);background:#fff;box-shadow:0 0 0 4px rgba(21,101,192,.1)}
+  .field textarea{resize:vertical;min-height:96px}
+  form.devis .btn-accent{width:100%;justify-content:center;margin-top:6px}
+  form.devis .fnote{text-align:center;color:var(--gris);font-size:.82rem;margin-top:14px}
+
+  /* Footer */
+  footer{background:#061a2e;color:#c3d2e0;padding:64px 0 0}
+  .foot-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1.2fr;gap:40px;padding-bottom:48px}
+  footer .logo{color:#fff;margin-bottom:16px}
+  footer .logo small{color:#8ba3ba}
+  .foot-col h4{color:#fff;font-family:'Plus Jakarta Sans';font-size:1.02rem;margin-bottom:16px}
+  .foot-col p,.foot-col a{display:block;font-size:.94rem;margin-bottom:10px;color:#a9bccf}
+  .foot-col a:hover{color:#fff}
+  .foot-desc{font-size:.94rem;color:#93a9be;max-width:290px}
+  .foot-contact .fc{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
+  .foot-bottom{border-top:1px solid rgba(255,255,255,.1);padding:22px 0;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;font-size:.86rem;color:#7f96ad}
+  .foot-bottom a{color:#a9bccf}
+  .foot-bottom a:hover{color:#fff}
+
+  /* Responsive */
+  @media(max-width:940px){
+    .hero .wrap{grid-template-columns:1fr;gap:40px}
+    .hero h1{font-size:2.5rem}
+    .zone-grid,.devis-grid{grid-template-columns:1fr;gap:36px}
+    .grid-services,.avis-grid,.why-grid{grid-template-columns:1fr 1fr}
+    .foot-grid{grid-template-columns:1fr 1fr;gap:32px}
+  }
+  @media(max-width:760px){
+    section{padding:56px 0}
+    .nav-links{position:fixed;top:74px;left:0;right:0;background:#fff;flex-direction:column;align-items:flex-start;gap:0;padding:10px 22px;box-shadow:0 12px 24px rgba(10,37,64,.1);border-bottom:1px solid #e6edf4;transform:translateY(-140%);transition:.32s ease;opacity:0;visibility:hidden}
+    .nav-links.open{transform:translateY(0);opacity:1;visibility:visible}
+    .nav-links li{width:100%;border-bottom:1px solid #eef2f6}
+    .nav-links a{display:block;padding:15px 0;width:100%}
+    .burger{display:flex}
+    .nav-cta .phone-btn span.lbl{display:none}
+    .grid-services,.avis-grid,.why-grid,.foot-grid{grid-template-columns:1fr}
+    h2.sec-title{font-size:1.75rem}
+    .hero h1{font-size:2.15rem}
+    .stats-row{gap:36px}
+    .demo-ribbon{bottom:10px;right:10px;left:10px;justify-content:center}
+  }
+  .burger.active span:nth-child(1){transform:translateY(8px) rotate(45deg)}
+  .burger.active span:nth-child(2){opacity:0}
+  .burger.active span:nth-child(3){transform:translateY(-8px) rotate(-45deg)}
+</style>
+</head>
+<body>
+
+<!-- Ruban démonstration -->
+<div class="demo-ribbon">
+  <span class="dr-txt">🌐 Site de démonstration — réalisé par AEM Conseil</span>
+  <a href="../../index.html">Créer mon site</a>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="wrap nav">
+    <a href="#accueil" class="logo">
+      <span class="mark">🔧</span>
+      <span>Dupont Plomberie<small>Plombier-chauffagiste · Valmont</small></span>
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#accueil">Accueil</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#zone">Zone</a></li>
+      <li><a href="#avis">Avis</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="tel:+33612345678" class="phone-btn">☎ <span class="lbl">06 12 34 56 78</span></a>
+      <button class="burger" id="burger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- Hero -->
+<section class="hero" id="accueil">
+  <div class="wrap">
+    <div class="hero-txt">
+      <span class="hero-pill">⚡ Intervention en moins de 30 min à Valmont</span>
+      <h1>Votre plombier de confiance à <span class="hl">Valmont</span></h1>
+      <p class="lead">Fuite, chauffe-eau en panne, canalisation bouchée ? Artisan certifié, nous intervenons rapidement, avec des prix clairs et sans mauvaise surprise.</p>
+      <div class="hero-btns">
+        <a href="#contact" class="btn btn-accent">Devis gratuit →</a>
+        <a href="tel:+33612345678" class="btn btn-ghost">☎ Appeler maintenant</a>
+      </div>
+      <div class="badges">
+        <div class="badge"><span class="ic">⚡</span> Intervention rapide</div>
+        <div class="badge"><span class="ic">💶</span> Devis gratuit</div>
+        <div class="badge"><span class="ic">✅</span> Artisan certifié</div>
+      </div>
+    </div>
+    <div class="hero-card">
+      <div class="hc-top">
+        <div class="hc-av">👨‍🔧</div>
+        <div>
+          <b>Julien Dupont</b>
+          <span>Artisan plombier depuis 2004</span>
+        </div>
+      </div>
+      <div class="hc-row"><span class="chk">✓</span> Déplacement offert pour tout devis</div>
+      <div class="hc-row"><span class="chk">✓</span> Tarifs annoncés avant intervention</div>
+      <div class="hc-row"><span class="chk">✓</span> Garantie 2 ans sur les installations</div>
+      <div class="hc-row"><span class="chk">✓</span> Assurance décennale à jour</div>
+      <div class="hc-cta">
+        <div class="num">☎ 06 12 34 56 78</div>
+        <small>Appel & devis sans engagement</small>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Bandeau urgence -->
+<div class="urgence">
+  <div class="wrap">
+    <span class="pulse"></span>
+    <b>🚨 Urgence plomberie 24h/24 et 7j/7 — dépannage en moins de 30 minutes</b>
+    <a href="tel:+33612345678" class="u-call">☎ Appeler le dépannage</a>
+  </div>
+</div>
+
+<!-- Services -->
+<section id="services">
+  <div class="wrap center">
+    <span class="eyebrow">Nos prestations</span>
+    <h2 class="sec-title">Tout ce dont votre logement a besoin</h2>
+    <p class="sec-intro">Dépannage d'urgence ou travaux planifiés : nous prenons en charge l'ensemble de vos besoins en plomberie et chauffage.</p>
+  </div>
+  <div class="wrap">
+    <div class="grid-services">
+      <div class="service">
+        <div class="s-ic">💧</div>
+        <h3>Dépannage fuite d'eau</h3>
+        <p>Recherche et réparation de fuites, joints, robinetterie. Intervention rapide pour limiter les dégâts.</p>
+      </div>
+      <div class="service">
+        <div class="s-ic">🔥</div>
+        <h3>Chauffe-eau & ballon</h3>
+        <p>Installation, remplacement et entretien de votre chauffe-eau électrique, gaz ou thermodynamique.</p>
+      </div>
+      <div class="service">
+        <div class="s-ic">🛁</div>
+        <h3>Rénovation salle de bain</h3>
+        <p>De la douche à l'italienne au réaménagement complet, un accompagnement clé en main.</p>
+      </div>
+      <div class="service">
+        <div class="s-ic">🌀</div>
+        <h3>Débouchage canalisation</h3>
+        <p>Éviers, WC, canalisations bouchées : débouchage haute pression et inspection caméra.</p>
+      </div>
+      <div class="service">
+        <div class="s-ic">♨️</div>
+        <h3>Chaudière & chauffage</h3>
+        <p>Entretien annuel, dépannage et installation de chaudières et radiateurs, toutes énergies.</p>
+      </div>
+      <div class="service">
+        <div class="s-ic">🚿</div>
+        <h3>Installation sanitaire</h3>
+        <p>Pose de WC, lavabos, robinetterie et raccordements. Travail soigné et durable.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Zone d'intervention -->
+<section class="zone" id="zone">
+  <div class="wrap">
+    <div class="zone-grid">
+      <div class="zone-map">
+        <span class="eyebrow" style="color:#ffb066">Secteur d'intervention</span>
+        <h3>Nous intervenons près de chez vous</h3>
+        <p>Basés à Valmont, nous couvrons toute l'agglomération et les communes voisines, rapidement.</p>
+        <span class="rad">📍 Rayon de 25 km autour de Valmont</span>
+      </div>
+      <div>
+        <h2 class="sec-title" style="font-size:1.7rem;margin-bottom:20px">Villes & quartiers desservis</h2>
+        <div class="villes">
+          <span class="ville"><span class="dot"></span>Valmont Centre</span>
+          <span class="ville"><span class="dot"></span>Saint-Aubin</span>
+          <span class="ville"><span class="dot"></span>La Chênaie</span>
+          <span class="ville"><span class="dot"></span>Bellevue</span>
+          <span class="ville"><span class="dot"></span>Montclair</span>
+          <span class="ville"><span class="dot"></span>Les Ormes</span>
+          <span class="ville"><span class="dot"></span>Rivière-Basse</span>
+          <span class="ville"><span class="dot"></span>Le Vieux-Bourg</span>
+          <span class="ville"><span class="dot"></span>Fontenoy</span>
+          <span class="ville"><span class="dot"></span>Clairval</span>
+          <span class="ville"><span class="dot"></span>Port-Marin</span>
+          <span class="ville"><span class="dot"></span>Beausoleil</span>
+        </div>
+        <p style="margin-top:20px;color:var(--gris)">Votre commune n'est pas dans la liste ? <a href="#contact" style="color:var(--bleu);font-weight:600">Contactez-nous</a>, nous nous déplaçons volontiers.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Avis -->
+<section id="avis">
+  <div class="wrap center">
+    <span class="eyebrow">Ils nous font confiance</span>
+    <h2 class="sec-title">Ce que disent nos clients</h2>
+  </div>
+  <div class="wrap">
+    <div class="rating-top">
+      <span class="big">4,9/5</span>
+      <div style="text-align:left">
+        <div class="stars">★★★★★</div>
+        <span class="sub">Basé sur 213 avis clients vérifiés</span>
+      </div>
+    </div>
+    <div class="avis-grid">
+      <div class="avis">
+        <div class="stars">★★★★★</div>
+        <p>« Fuite un dimanche soir, Julien est venu en 25 minutes. Efficace, propre et prix annoncé avant de commencer. Je recommande sans hésiter ! »</p>
+        <div class="who">
+          <span class="av" style="background:linear-gradient(135deg,#1565c0,#4a90d9)">MC</span>
+          <div><b>Marie C.</b><span>Valmont Centre</span></div>
+        </div>
+      </div>
+      <div class="avis">
+        <div class="stars">★★★★★</div>
+        <p>« Remplacement de notre chauffe-eau réalisé dans la journée. Travail impeccable et conseils utiles pour la suite. Un artisan sérieux. »</p>
+        <div class="who">
+          <span class="av" style="background:linear-gradient(135deg,#12a150,#0d8a44)">TR</span>
+          <div><b>Thomas R.</b><span>Saint-Aubin</span></div>
+        </div>
+      </div>
+      <div class="avis">
+        <div class="stars">★★★★★</div>
+        <p>« Rénovation complète de notre salle de bain. Délais respectés, finitions soignées et toujours à l'écoute. On est ravis du résultat. »</p>
+        <div class="who">
+          <span class="av" style="background:linear-gradient(135deg,#ff7a00,#e56b00)">SL</span>
+          <div><b>Sophie L.</b><span>Bellevue</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pourquoi nous -->
+<section class="why">
+  <div class="wrap center">
+    <span class="eyebrow" style="color:#ffb066">Pourquoi Dupont Plomberie</span>
+    <h2 class="sec-title" style="color:#fff">De bonnes raisons de nous choisir</h2>
+    <p class="sec-intro" style="color:#a9bccf">Un artisan local, disponible et transparent, à qui vous pouvez confier votre logement en toute sérénité.</p>
+  </div>
+  <div class="wrap">
+    <div class="why-grid">
+      <div class="why-card">
+        <div class="w-ic">⚡</div>
+        <h3>Rapidité d'intervention</h3>
+        <p>Dépannage en moins de 30 minutes en zone urbaine, 24h/24. Nous savons qu'une fuite n'attend pas.</p>
+      </div>
+      <div class="why-card">
+        <div class="w-ic">💶</div>
+        <h3>Transparence des prix</h3>
+        <p>Devis gratuit et détaillé, tarif annoncé avant chaque intervention. Zéro mauvaise surprise sur la facture.</p>
+      </div>
+      <div class="why-card">
+        <div class="w-ic">🛡️</div>
+        <h3>Garantie & assurance</h3>
+        <p>Garantie 2 ans sur nos installations, assurance décennale à jour. Un travail dont nous répondons.</p>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat"><b>20 ans</b><span>d'expérience</span></div>
+      <div class="stat"><b>+3 500</b><span>interventions réalisées</span></div>
+      <div class="stat"><b>30 min</b><span>délai moyen d'urgence</span></div>
+      <div class="stat"><b>4,9/5</b><span>satisfaction client</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- Devis / Contact -->
+<section id="contact">
+  <div class="wrap">
+    <div class="devis-grid">
+      <div class="devis-left">
+        <span class="eyebrow">Contact & devis</span>
+        <h2>Demandez votre devis gratuit</h2>
+        <p>Décrivez-nous votre besoin, nous vous rappelons rapidement avec une estimation claire. Sans engagement.</p>
+        <div class="li"><span class="ic">☎</span> <div><b>06 12 34 56 78</b><br><span style="color:var(--gris);font-size:.9rem">Disponible 24h/24 pour les urgences</span></div></div>
+        <div class="li"><span class="ic">✉️</span> <div><b>contact@dupont-plomberie.fr</b><br><span style="color:var(--gris);font-size:.9rem">Réponse sous 24h</span></div></div>
+        <div class="li"><span class="ic">📍</span> <div><b>12 rue des Artisans, 76540 Valmont</b><br><span style="color:var(--gris);font-size:.9rem">Du lundi au samedi</span></div></div>
+      </div>
+      <form class="devis" action="#" onsubmit="return false;">
+        <h3>Votre demande de devis</h3>
+        <p class="fsub">Réponse rapide et gratuite garantie.</p>
+        <div class="field">
+          <label for="nom">Nom complet</label>
+          <input type="text" id="nom" placeholder="Ex. Marie Durand">
+        </div>
+        <div class="field">
+          <label for="tel">Téléphone</label>
+          <input type="tel" id="tel" placeholder="06 00 00 00 00">
+        </div>
+        <div class="field">
+          <label for="type">Type d'intervention</label>
+          <select id="type">
+            <option>Dépannage / urgence fuite</option>
+            <option>Chauffe-eau / ballon</option>
+            <option>Rénovation salle de bain</option>
+            <option>Débouchage canalisation</option>
+            <option>Chaudière / chauffage</option>
+            <option>Autre / je ne sais pas</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="msg">Décrivez votre besoin</label>
+          <textarea id="msg" placeholder="Précisez le problème, l'adresse, l'urgence..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-accent">Envoyer ma demande →</button>
+        <p class="fnote">🔒 Vos informations restent confidentielles.</p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <div class="logo">
+          <span class="mark">🔧</span>
+          <span>Dupont Plomberie<small>Plombier-chauffagiste · Valmont</small></span>
+        </div>
+        <p class="foot-desc">Artisan plombier-chauffagiste de confiance à Valmont depuis 2004. Dépannage, installation et rénovation, 7j/7.</p>
+      </div>
+      <div class="foot-col">
+        <h4>Services</h4>
+        <a href="#services">Dépannage fuite</a>
+        <a href="#services">Chauffe-eau</a>
+        <a href="#services">Salle de bain</a>
+        <a href="#services">Débouchage</a>
+        <a href="#services">Chaudière</a>
+      </div>
+      <div class="foot-col">
+        <h4>Horaires</h4>
+        <p>Lun – Sam : 8h – 19h</p>
+        <p>Dimanche : urgences</p>
+        <p style="color:#ffb066;font-weight:600">🚨 Urgences 24h/24</p>
+      </div>
+      <div class="foot-col foot-contact">
+        <h4>Contact</h4>
+        <div class="fc"><span>☎</span> <a href="tel:+33612345678">06 12 34 56 78</a></div>
+        <div class="fc"><span>✉️</span> <a href="mailto:contact@dupont-plomberie.fr">contact@dupont-plomberie.fr</a></div>
+        <div class="fc"><span>📍</span> <span>12 rue des Artisans<br>76540 Valmont</span></div>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 Dupont Plomberie — SIRET 000 000 000 00000 · Assurance décennale · Mentions légales</span>
+      <span>Site de démonstration réalisé par <a href="../../index.html">AEM Conseil</a></span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const burger = document.getElementById('burger');
+  const navLinks = document.getElementById('navLinks');
+  burger.addEventListener('click', () => {
+    navLinks.classList.toggle('open');
+    burger.classList.toggle('active');
+  });
+  navLinks.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      navLinks.classList.remove('open');
+      burger.classList.remove('active');
+    });
+  });
+</script>
+</body>
+</html>
