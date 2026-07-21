@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://send.aemconseil.eu/</loc><priority>1.0</priority></url>
+  <url><loc>https://send.aemconseil.eu/demos/restaurant/index.html</loc><priority>0.6</priority></url>
+  <url><loc>https://send.aemconseil.eu/demos/artisan/index.html</loc><priority>0.6</priority></url>
+  <url><loc>https://send.aemconseil.eu/demos/portfolio/index.html</loc><priority>0.6</priority></url>
+  <url><loc>https://send.aemconseil.eu/demos/boutique/index.html</loc><priority>0.6</priority></url>
+  <url><loc>https://send.aemconseil.eu/product/index.html</loc><priority>0.5</priority></url>
+</urlset>
