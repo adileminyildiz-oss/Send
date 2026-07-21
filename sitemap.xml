@@ -1,5 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://send.aemconseil.eu/</loc><priority>1.0</priority></url>
-  <url><loc>https://send.aemconseil.eu/etude-marche/index.html</loc><priority>0.5</priority></url>
+  <url><loc>https://send.aemconseil.eu/recherche/index.html</loc><priority>0.8</priority></url>
+  <url><loc>https://send.aemconseil.eu/deposer/index.html</loc><priority>0.8</priority></url>
+  <url><loc>https://send.aemconseil.eu/aides/index.html</loc><priority>0.8</priority></url>
+  <url><loc>https://send.aemconseil.eu/devis/index.html</loc><priority>0.7</priority></url>
+  <url><loc>https://send.aemconseil.eu/conformite/index.html</loc><priority>0.6</priority></url>
+  <url><loc>https://send.aemconseil.eu/appels-offres/index.html</loc><priority>0.7</priority></url>
+  <url><loc>https://send.aemconseil.eu/metiers/index.html</loc><priority>0.7</priority></url>
+  <url><loc>https://send.aemconseil.eu/metiers/plombier-lyon/</loc><priority>0.6</priority></url>
+  <url><loc>https://send.aemconseil.eu/metiers/electricien-lyon/</loc><priority>0.6</priority></url>
+  <url><loc>https://send.aemconseil.eu/metiers/couvreur-lyon/</loc><priority>0.6</priority></url>
+  <url><loc>https://send.aemconseil.eu/metiers/chauffagiste-lyon/</loc><priority>0.6</priority></url>
+  <url><loc>https://send.aemconseil.eu/metiers/menuisier-lyon/</loc><priority>0.6</priority></url>
+  <url><loc>https://send.aemconseil.eu/metiers/macon-lyon/</loc><priority>0.6</priority></url>
+  <url><loc>https://send.aemconseil.eu/guides/index.html</loc><priority>0.7</priority></url>
+  <url><loc>https://send.aemconseil.eu/guides/obtenir-maprimerenov/</loc><priority>0.6</priority></url>
+  <url><loc>https://send.aemconseil.eu/guides/choisir-artisan/</loc><priority>0.6</priority></url>
+  <url><loc>https://send.aemconseil.eu/guides/prix-travaux/</loc><priority>0.6</priority></url>
 </urlset>
