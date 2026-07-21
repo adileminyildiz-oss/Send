@@ -1,30 +1,15 @@
-# Dépendances
+# Dépendances (appartiennent au générateur vidéo archivé)
 node_modules/
 
-# Sorties vidéo générées
-output/*.mp4
-output/*.mov
-output/*.webm
-
-# Fichiers temporaires de rendu
+# Temporaires
 .tmp/
 tmp/
 *.tmp
-
-# Temporaire du serveur web (uploads + rendus en cours)
 .work/
-
-# Médias utilisateur (photos/musique) — on ne versionne pas les assets lourds
-photos/*
-!photos/.gitkeep
-!photos/README.md
-music/*
-!music/.gitkeep
 
 # Secrets / config locale
 .env
 .env.local
-!.env.example
 
 # OS
 .DS_Store
