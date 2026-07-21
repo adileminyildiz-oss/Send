@@ -246,6 +246,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../assets/js/config.js"></script>
+<script src="../assets/js/db.js"></script>
 <script src="../assets/js/batilink.js"></script>
 <script>
 'use strict';
@@ -359,9 +360,32 @@
   }
 
   // --- Rendu des chantiers déposés ---
+  // Préfère les chantiers RÉELS (Supabase) ; repli sur localStorage.
   function renderDepots() {
+    var local = readJSON('batilink_depots', []);
+    if (!Array.isArray(local)) local = [];
+    if (window.BLDB && window.BLDB.ready) {
+      window.BLDB.myChantiers().then(function (rows) {
+        if (Array.isArray(rows) && rows.length) {
+          var mapped = rows.map(function (r) {
+            r = r || {};
+            return {
+              titre: r.titre, metier: r.metier, ville: r.ville, budget: r.budget,
+              date: r.created_at ? new Date(r.created_at).toLocaleDateString('fr-FR') : ''
+            };
+          });
+          paintDepots(mapped);
+          var sd = $('statDep'); if (sd) sd.textContent = mapped.length;
+        } else {
+          paintDepots(local);
+        }
+      }).catch(function () { paintDepots(local); });
+    } else {
+      paintDepots(local);
+    }
+  }
+  function paintDepots(deps) {
     var wrap = $('depList');
-    var deps = readJSON('batilink_depots', []);
     if (!Array.isArray(deps)) deps = [];
     if (!deps.length) {
       wrap.innerHTML = '<div class="empty-mini">Vous n\'avez pas encore déposé de chantier.' +
@@ -387,8 +411,7 @@
 
   // --- Profil pro (par utilisateur) ---
   function profileKey(userId) { return 'batilink_profil_' + userId; }
-  function loadProfile(userId) {
-    var p = readJSON(profileKey(userId), {});
+  function fillProfile(p) {
     if (!p || typeof p !== 'object') p = {};
     $('pf_ent').value = p.entreprise || '';
     $('pf_metier').value = p.metier || '';
@@ -396,17 +419,46 @@
     $('pf_tel').value = p.tel || '';
     $('pf_desc').value = p.description || '';
   }
+  function loadProfile(userId) {
+    // 1) Repli immédiat sur le cache local (affichage instantané).
+    fillProfile(readJSON(profileKey(userId), {}));
+    // 2) Si la base est prête, on remplace par le profil réel (source de vérité).
+    if (window.BLDB && window.BLDB.ready) {
+      window.BLDB.getProfile().then(function (row) {
+        if (!row) return;
+        var mapped = {
+          entreprise: row.nom || '', metier: row.metier || '',
+          zone: row.ville || '', tel: row.telephone || '', description: row.bio || ''
+        };
+        fillProfile(mapped);
+        writeJSON(profileKey(userId), mapped);
+      }).catch(function () {});
+    }
+  }
   function bindProfile(userId) {
     var form = $('profForm');
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      writeJSON(profileKey(userId), {
+      var local = {
         entreprise: $('pf_ent').value.trim(),
         metier: $('pf_metier').value,
         zone: $('pf_zone').value.trim(),
         tel: $('pf_tel').value.trim(),
         description: $('pf_desc').value.trim()
-      });
+      };
+      // Toujours écrire le cache local (repli hors ligne / base absente).
+      writeJSON(profileKey(userId), local);
+      // Upsert en base si disponible.
+      if (window.BLDB && window.BLDB.ready) {
+        window.BLDB.saveProfile({
+          role: 'artisan',
+          nom: local.entreprise,
+          metier: local.metier,
+          ville: local.zone,
+          telephone: local.tel,
+          bio: local.description
+        }).catch(function () {});
+      }
       var ok = $('profOk');
       ok.style.display = 'block';
       clearTimeout(bindProfile._t);

@@ -50,7 +50,7 @@
 <section>
   <div class="wrap">
     <div class="formcard reveal">
-      <div class="form-ok" id="ok">✓ Merci ! Votre demande a bien été enregistrée (démonstration). Un conseiller BâtiLink vous recontactera.</div>
+      <div class="form-ok" id="ok">✓ Merci ! Votre demande a bien été enregistrée. Un conseiller BâtiLink vous recontactera.</div>
       <form id="form" novalidate>
         <div class="field two">
           <div><label for="metier">Type de travaux</label>
@@ -112,11 +112,13 @@
 <footer class="site">
   <div class="wrap foot-bot" style="border-top:none;margin-top:0">
     <p>© 2026 BâtiLink — une activité du cabinet AEM-CONSEIL.</p>
-    <p class="mono">DÉMO · FORMULAIRE NON CONNECTÉ</p>
+    <p class="mono">PUBLICATION RÉELLE SI CONNECTÉ</p>
   </div>
 </footer>
 
 <script src="../assets/js/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/js/db.js"></script>
 <script src="../assets/js/batilink.js"></script>
 <script>
   document.getElementById('form').addEventListener('submit', function (e) {
@@ -127,26 +129,54 @@
       type_de_travaux: val('metier'), ville: val('ville'), budget: val('budget'),
       delai: val('delai'), message: val('desc'), nom: val('nom'), telephone: val('tel'), email: val('email')
     };
+    var titre = data.type_de_travaux + ' — ' + data.ville;
+
     // Enregistre le chantier dans l'espace client (localStorage)
     try {
       var deps = JSON.parse(localStorage.getItem('batilink_depots')) || [];
-      deps.unshift({ titre: data.type_de_travaux + ' — ' + data.ville, metier: data.type_de_travaux, ville: data.ville, budget: data.budget, date: new Date().toLocaleDateString('fr-FR') });
+      deps.unshift({ titre: titre, metier: data.type_de_travaux, ville: data.ville, budget: data.budget, date: new Date().toLocaleDateString('fr-FR') });
       localStorage.setItem('batilink_depots', JSON.stringify(deps));
     } catch (err) {}
 
-    var done = function () {
-      document.getElementById('ok').style.display = 'block';
+    var okEl = document.getElementById('ok');
+    var done = function (published) {
+      if (published) {
+        okEl.innerHTML = '✓ Votre chantier est publié : il est désormais visible par les artisans dans la <a href="../recherche/index.html?type=chantiers" style="color:inherit;text-decoration:underline">recherche BâtiLink</a>. Un conseiller peut aussi vous accompagner.';
+      } else {
+        okEl.innerHTML = '✓ Merci ! Votre demande a bien été enregistrée. Un conseiller BâtiLink vous recontactera. ' +
+          '<br><span style="font-size:13.5px">💡 <a href="../compte/index.html" style="color:inherit;text-decoration:underline">Créez un compte gratuit</a> pour publier votre chantier auprès de tous les artisans de la place de marché.</span>';
+      }
+      okEl.style.display = 'block';
       document.getElementById('form').reset();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
-    // Envoi réel par e-mail si Formspree est configuré, sinon démo locale
+
+    // Envoi réel par e-mail (Formspree) — best effort, non bloquant.
     if (window.FORMSPREE_ENDPOINT) {
       fetch(window.FORMSPREE_ENDPOINT, {
         method: 'POST', headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
-      }).then(done).catch(done);
+      }).catch(function () {});
+    }
+
+    // Publication réelle sur la place de marché si connecté et base disponible.
+    if (window.BLDB && window.BLDB.ready) {
+      window.BLDB.session().then(function (user) {
+        if (!user) { done(false); return; }
+        window.BLDB.createChantier({
+          titre: titre,
+          metier: data.type_de_travaux,
+          ville: data.ville,
+          budget: data.budget,
+          delai: data.delai,
+          description: data.message,
+          contact_nom: data.nom,
+          contact_tel: data.telephone,
+          contact_email: data.email
+        }).then(function (row) { done(!!row); }).catch(function () { done(false); });
+      }).catch(function () { done(false); });
     } else {
-      done();
+      done(false);
     }
   });
 </script>
