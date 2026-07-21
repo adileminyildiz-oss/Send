@@ -1,0 +1,26 @@
+# Service systemd pour lancer le générateur vidéo au démarrage.
+# À copier dans /etc/systemd/system/generate-ad.service puis :
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now generate-ad
+#
+# Adapte User, WorkingDirectory et le chemin de node si besoin.
+
+[Unit]
+Description=Generateur de videos publicitaires (AEM Conseil - interne)
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/opt/generate-ad
+ExecStart=/usr/bin/node server/server.js
+EnvironmentFile=/opt/generate-ad/.env
+Restart=on-failure
+RestartSec=5
+# Durcissement basique
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

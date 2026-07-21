@@ -11,6 +11,9 @@ output/*.webm
 tmp/
 *.tmp
 
+# Temporaire du serveur web (uploads + rendus en cours)
+.work/
+
 # Médias utilisateur (photos/musique) — on ne versionne pas les assets lourds
 photos/*
 !photos/.gitkeep
@@ -21,6 +24,7 @@ music/*
 # Secrets / config locale
 .env
 .env.local
+!.env.example
 
 # OS
 .DS_Store

@@ -107,6 +107,29 @@ commençant à 0) est optionnel ; sans lui, la légende suit l'ordre du tableau.
 
 ---
 
+## 🌐 Version web (interne)
+
+En plus du CLI, le projet fournit une **interface web** : on dépose les photos
+dans le navigateur, on règle le style, et on télécharge la vidéo — le rendu
+ffmpeg tourne côté serveur.
+
+```bash
+cp .env.example .env      # définis APP_PASSWORD (accès interne)
+npm ci
+npm run serve             # -> http://localhost:3000
+```
+
+- Upload multi-photos (glisser-déposer) + **réordonnancement** des plans
+- Choix du template, format, transition, titre, CTA, légendes, musique
+- **Accès protégé** par mot de passe (HTTP Basic Auth, `APP_USER`/`APP_PASSWORD`)
+- Barre de progression en temps réel + aperçu + téléchargement
+
+> ⚠️ Le rendu vidéo utilise **ffmpeg côté serveur** : l'app doit tourner sur un
+> **serveur Node** (VPS), pas sur un hébergement statique. Pour la mise en ligne
+> sur `send.aemconseil.eu` (VPS IONOS, DNS, HTTPS), voir **[DEPLOY.md](DEPLOY.md)**.
+
+---
+
 ## 🤖 Mode IA (image → vidéo)
 
 Le mode `--ai` remplace chaque photo par un **clip animé** généré par un modèle
@@ -154,6 +177,11 @@ src/
   ai/
     index.js           Dispatcher des providers IA
     replicate.js       Provider Replicate (image → vidéo)
+server/                Version web interne (Express + upload)
+  server.js            API + service statique (auth par mot de passe)
+  jobs.js              File d'attente et suivi des rendus
+  public/              Frontend (upload, réglages, aperçu)
+deploy/                Fichiers de déploiement (systemd, nginx)
 templates/*.json       Styles de pub prêts à l'emploi
 photos/                Tes photos d'entrée (non versionnées)
 music/                 Tes musiques (non versionnées)
@@ -161,7 +189,8 @@ output/                Vidéos générées (non versionnées)
 examples/              Exemples (légendes...)
 ```
 
-Aucune dépendance npm : tout repose sur Node et ffmpeg.
+Le **CLI** ne dépend d'aucun paquet npm (seulement Node + ffmpeg). La **version
+web** ajoute `express` et `multer` (`npm ci` pour les installer).
 
 ---
 
