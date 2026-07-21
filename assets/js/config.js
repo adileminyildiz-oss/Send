@@ -12,3 +12,12 @@
 // ---------------------------------------------------------------------------
 window.SUPABASE_URL = "https://kneexwqmlgqdwferckkq.supabase.co";
 window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtuZWV4d3FtbGdxZHdmZXJja2txIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2MzY5MzEsImV4cCI6MjEwMDIxMjkzMX0.gVA95To1dOX_o9BpSFWCoj_5R-OqYsdIROzjLzkqvA4";
+
+// ---------------------------------------------------------------------------
+// Formspree (envoi réel des formulaires par e-mail, sans serveur).
+// Crée un formulaire gratuit sur https://formspree.io → copie ton endpoint
+// (ex. "https://formspree.io/f/xxxxxxx") ci-dessous. Tant que c'est vide, les
+// formulaires enregistrent localement et affichent un message de démonstration.
+// ---------------------------------------------------------------------------
+window.FORMSPREE_ENDPOINT = "";
+

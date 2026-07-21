@@ -116,14 +116,38 @@
   </div>
 </footer>
 
+<script src="../assets/js/config.js"></script>
 <script src="../assets/js/batilink.js"></script>
 <script>
   document.getElementById('form').addEventListener('submit', function (e) {
     e.preventDefault();
     if (!this.checkValidity()) { this.reportValidity(); return; }
-    document.getElementById('ok').style.display = 'block';
-    this.reset();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    var val = function (id) { var el = document.getElementById(id); return el ? el.value : ''; };
+    var data = {
+      type_de_travaux: val('metier'), ville: val('ville'), budget: val('budget'),
+      delai: val('delai'), message: val('desc'), nom: val('nom'), telephone: val('tel'), email: val('email')
+    };
+    // Enregistre le chantier dans l'espace client (localStorage)
+    try {
+      var deps = JSON.parse(localStorage.getItem('batilink_depots')) || [];
+      deps.unshift({ titre: data.type_de_travaux + ' — ' + data.ville, metier: data.type_de_travaux, ville: data.ville, budget: data.budget, date: new Date().toLocaleDateString('fr-FR') });
+      localStorage.setItem('batilink_depots', JSON.stringify(deps));
+    } catch (err) {}
+
+    var done = function () {
+      document.getElementById('ok').style.display = 'block';
+      document.getElementById('form').reset();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    // Envoi réel par e-mail si Formspree est configuré, sinon démo locale
+    if (window.FORMSPREE_ENDPOINT) {
+      fetch(window.FORMSPREE_ENDPOINT, {
+        method: 'POST', headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      }).then(done).catch(done);
+    } else {
+      done();
+    }
   });
 </script>
 </body>

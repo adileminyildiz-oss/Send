@@ -45,6 +45,27 @@
   });
 })();
 
+// Favoris (localStorage) — partagés entre recherche, fiche détail et espace client
+window.BLFav = (function () {
+  var KEY = 'batilink_favoris';
+  function list() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; } }
+  function save(a) { try { localStorage.setItem(KEY, JSON.stringify(a)); } catch (e) {} }
+  function keyOf(f) { return f.type + ':' + f.id; }
+  return {
+    list: list,
+    has: function (type, id) { return list().some(function (f) { return f.type === type && String(f.id) === String(id); }); },
+    toggle: function (fav) {
+      var a = list();
+      var i = a.findIndex(function (f) { return keyOf(f) === keyOf(fav); });
+      if (i >= 0) { a.splice(i, 1); save(a); return false; }
+      a.push(fav); save(a); return true;
+    },
+    remove: function (type, id) {
+      save(list().filter(function (f) { return !(f.type === type && String(f.id) === String(id)); }));
+    }
+  };
+})();
+
 // Recherche de l'accueil : onglets + redirection vers la page de résultats
 (function () {
   var tabs = document.getElementById('tabs');
