@@ -243,3 +243,11 @@ html:not(.js) .reveal{opacity:1;transform:none}
   .btn-hi:hover{transform:none}
 }
 :focus-visible{outline:2px solid var(--hi);outline-offset:3px;border-radius:4px}
+
+/* Champ à compléter (placeholder de donnée légale) */
+.tofill{background:color-mix(in srgb,var(--hi) 18%,transparent);border-radius:4px;padding:0 4px;font-style:normal}
+
+/* Ligne de liens légaux en pied de page */
+.foot-legal{display:flex;gap:14px;flex-wrap:wrap}
+.foot-legal a{color:var(--muted-2);font-size:13px}
+.foot-legal a:hover{color:var(--hi)}
