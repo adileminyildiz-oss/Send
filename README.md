@@ -17,6 +17,10 @@ demos/                  Sites d'exemple (chacun autonome)
   artisan/              Démo artisan     « Dupont Plomberie »
   portfolio/            Démo freelance   « Léa Moreau, photographe »
   boutique/             Démo e-commerce  « Maison Verte » (panier fonctionnel)
+product/                Démo de produit SaaS « Dropscope » (concept original)
+  index.html            Landing du produit (hero, features, tarifs, FAQ)
+  app.html              Interface de démonstration (dashboard, données d'exemple)
+  assets/               CSS + JS du produit
 CNAME                   Domaine personnalisé (send.aemconseil.eu)
 .nojekyll               Désactive le traitement Jekyll de GitHub Pages
 archive/                Ancien projet (générateur de vidéos) — conservé
