@@ -1,6 +1,6 @@
-# 🌐 AEM Conseil — Site de l'agence web
+# 🌐 SEND — Site de l'agence web
 
-Site vitrine de **AEM Conseil**, agence de création de sites internet, avec un
+Site vitrine de **SEND**, agence de création de sites internet, avec un
 **portfolio de sites d'exemple** (démos navigables). Site **100 % statique** :
 hébergeable gratuitement sur **GitHub Pages**, sur le domaine
 `send.aemconseil.eu`.
