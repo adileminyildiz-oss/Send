@@ -1,0 +1,12 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+.work
+tmp
+.tmp
+output/*.mp4
+photos/*
+music/*
+.env
+.env.local

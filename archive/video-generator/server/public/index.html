@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Générateur de vidéos pub — AEM Conseil</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🎬</span>
+      <div>
+        <strong>Générateur de vidéos publicitaires</strong>
+        <small>Outil interne · AEM Conseil</small>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- Colonne gauche : photos -->
+    <section class="panel">
+      <h2>1 · Photos</h2>
+      <div id="dropzone" class="dropzone">
+        <input type="file" id="fileInput" accept="image/*,video/*" multiple hidden />
+        <p>Glisse tes photos ici<br /><small>ou clique pour parcourir</small></p>
+      </div>
+      <p class="hint" id="orderHint" hidden>Glisse les vignettes pour changer l'ordre des plans.</p>
+      <ul id="thumbs" class="thumbs"></ul>
+    </section>
+
+    <!-- Colonne droite : options -->
+    <section class="panel">
+      <h2>2 · Réglages</h2>
+      <div class="grid">
+        <label>Template
+          <select id="template"></select>
+        </label>
+        <label>Format
+          <select id="format"></select>
+        </label>
+        <label>Durée / photo (s)
+          <input type="number" id="duration" min="0.8" max="10" step="0.1" placeholder="auto" />
+        </label>
+        <label>Transition
+          <select id="transition">
+            <option value="">(template)</option>
+            <option value="fade">Fondu</option>
+            <option value="dissolve">Dissolve</option>
+            <option value="slideleft">Glissé gauche</option>
+            <option value="slideright">Glissé droite</option>
+            <option value="wipeleft">Balayage gauche</option>
+            <option value="circleopen">Cercle</option>
+            <option value="none">Aucune (coupe franche)</option>
+          </select>
+        </label>
+        <label class="full">Titre (début)
+          <input type="text" id="title" maxlength="80" placeholder="Ex : Soldes -50%" />
+        </label>
+        <label class="full">Call-to-action (fin)
+          <input type="text" id="cta" maxlength="80" placeholder="Ex : Commande maintenant" />
+        </label>
+        <label>Couleur du texte
+          <input type="color" id="titleColor" value="#ffffff" />
+        </label>
+        <label class="check">
+          <input type="checkbox" id="kenburns" checked /> Effet Ken Burns (zoom/pano)
+        </label>
+        <label class="full">Musique de fond (optionnel)
+          <input type="file" id="music" accept="audio/*" />
+        </label>
+        <label class="full" id="captionsWrap">Légendes par photo (une par ligne, dans l'ordre des plans)
+          <textarea id="captions" rows="3" placeholder="Notre nouvelle collection&#10;Fabriqué à la main&#10;Livraison offerte"></textarea>
+        </label>
+        <label class="check full" id="aiWrap" hidden>
+          <input type="checkbox" id="ai" /> Animer les photos par IA (plus lent, coût par photo)
+        </label>
+        <label class="full" id="aiPromptWrap" hidden>Prompt de mouvement IA
+          <input type="text" id="aiPrompt" placeholder="léger mouvement de caméra cinématique" />
+        </label>
+      </div>
+
+      <button id="generate" class="btn-primary" disabled>Générer la vidéo</button>
+
+      <div id="progress" class="progress" hidden>
+        <div class="bar"><div id="barFill" class="bar-fill"></div></div>
+        <p id="progressText">Préparation…</p>
+      </div>
+
+      <div id="result" class="result" hidden>
+        <video id="preview" controls playsinline></video>
+        <a id="download" class="btn-primary" download>⬇️ Télécharger la vidéo</a>
+        <p id="resultMeta" class="hint"></p>
+      </div>
+
+      <p id="error" class="error" hidden></p>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dropscope — Démo de l'outil</title>
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/app.css" />
+  <link rel="stylesheet" href="assets/css/dashboard.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛰️</text></svg>" />
+</head>
+<body class="app">
+
+  <!-- Sidebar -->
+  <aside class="side" id="side">
+    <a class="brand" href="index.html"><span class="logo">D</span> Dropscope</a>
+    <div class="grp-label">Recherche</div>
+    <nav id="nav">
+      <a data-view="products" class="active"><span class="i">📦</span> Produits gagnants</a>
+      <a data-view="ads"><span class="i">🛰️</span> Veille publicitaire</a>
+      <a data-view="favs"><span class="i">⭐</span> Mes favoris <span id="favCount" class="badge" style="margin-left:auto">0</span></a>
+    </nav>
+    <div class="grp-label">Compte</div>
+    <nav>
+      <a><span class="i">📊</span> Rapports</a>
+      <a><span class="i">⚙️</span> Réglages</a>
+    </nav>
+    <div class="upsell">
+      <h4>Passez en Pro</h4>
+      <p>Recherches illimitées, veille pub et exports.</p>
+      <a href="index.html#pricing" class="btn btn-primary" style="width:100%;justify-content:center">Voir les offres</a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="appbar">
+      <button class="mobile-menu" id="mobileMenu" aria-label="Menu">☰</button>
+      <div class="search">
+        <span>🔎</span>
+        <input id="search" type="text" placeholder="Rechercher un produit, une niche…" />
+      </div>
+      <div class="who">
+        <span class="badge">Démo · données d'exemple</span>
+        <div class="avatar">A</div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- Vue Produits -->
+      <section id="view-products">
+        <div class="page-head">
+          <div><h1>Produits gagnants</h1><p>Classés par score de tendance. Données d'exemple à but de démonstration.</p></div>
+        </div>
+        <div class="stats" id="stats"></div>
+        <div class="filters" id="nicheFilters"></div>
+        <div class="tablewrap">
+          <table class="dt">
+            <thead>
+              <tr>
+                <th data-sort="name">Produit</th>
+                <th data-sort="niche" class="hide-sm">Niche</th>
+                <th data-sort="price">Prix</th>
+                <th data-sort="margin" class="hide-sm">Marge</th>
+                <th data-sort="trend">Tendance 7 j.</th>
+                <th class="hide-sm">Évolution</th>
+                <th data-sort="score">Score</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+        <div class="empty hidden" id="emptyProducts">Aucun produit ne correspond à votre recherche.</div>
+      </section>
+
+      <!-- Vue Pubs -->
+      <section id="view-ads" class="hidden">
+        <div class="page-head">
+          <div><h1>Veille publicitaire</h1><p>Publicités actives (exemples). En production : bibliothèques publiques Meta &amp; TikTok.</p></div>
+        </div>
+        <div class="ads" id="adGrid"></div>
+      </section>
+
+      <!-- Vue Favoris -->
+      <section id="view-favs" class="hidden">
+        <div class="page-head">
+          <div><h1>Mes favoris</h1><p>Vos produits mis de côté pendant cette session.</p></div>
+        </div>
+        <div class="tablewrap"><table class="dt"><thead><tr>
+          <th>Produit</th><th class="hide-sm">Niche</th><th>Prix</th><th>Score</th><th></th>
+        </tr></thead><tbody id="favRows"></tbody></table></div>
+        <div class="empty hidden" id="emptyFavs">Aucun favori pour l'instant. Cliquez sur ⭐ dans la liste des produits.</div>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="assets/js/dashboard.js"></script>
+</body>
+</html>

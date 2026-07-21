@@ -1,0 +1,16 @@
+# Dépendances (appartiennent au générateur vidéo archivé)
+node_modules/
+
+# Temporaires
+.tmp/
+tmp/
+*.tmp
+.work/
+
+# Secrets / config locale
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db

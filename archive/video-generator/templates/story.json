@@ -1,0 +1,17 @@
+{
+  "name": "story",
+  "description": "Story verticale plein écran (Instagram/TikTok/Shorts). Rythme moyen, textes gros.",
+  "format": "9:16",
+  "fps": 30,
+  "slideDuration": 3.0,
+  "transition": "dissolve",
+  "transitionDuration": 0.6,
+  "kenburns": true,
+  "kenburnsIntensity": 0.12,
+  "musicVolume": 0.8,
+  "audioFadeOut": 2.0,
+  "font": "Sans",
+  "titleColor": "#FFFFFF",
+  "titleOutline": "#000000",
+  "fontSize": 66
+}
