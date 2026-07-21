@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Appels d'offres Travaux — Île-de-France | BâtiLink</title>
-<meta name="description" content="Les appels d'offres publics de travaux en Île-de-France, issus de la source officielle BOAMP (open data), mis à jour en direct.">
+<title>Appels d'offres publics — Marchés de l'État & collectivités | BâtiLink</title>
+<meta name="description" content="Les appels d'offres publics de travaux (État, collectivités, établissements publics) issus de la source officielle BOAMP en open data. Recherche nationale, toutes les informations de chaque avis.">
 <link rel="canonical" href="https://send.aemconseil.eu/appels-offres/">
 <link rel="stylesheet" href="../assets/css/batilink.css">
 <script>document.documentElement.className += ' js';</script>
@@ -12,20 +12,40 @@
 <style>
   .info{background:color-mix(in srgb,var(--hi) 8%,var(--surface));border:1px solid var(--line-2);border-radius:12px;padding:14px 18px;font-size:13.5px;color:var(--muted);margin-bottom:22px}
   .info b{color:var(--text)}
-  .aotop{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
-  .aotop .selectbox{height:44px}
+  .aotop{display:grid;grid-template-columns:1fr 160px auto;gap:10px;align-items:center;margin-bottom:10px}
+  .aotop input{height:44px;padding:0 14px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:14.5px;background:var(--surface-2);color:var(--text);width:100%}
+  .aotop input:focus{outline:2px solid color-mix(in srgb,var(--hi) 40%,transparent);border-color:var(--hi)}
+  .aolinks{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;font-size:13px}
+  .aolinks a{color:var(--muted);border:1px solid var(--line-2);border-radius:999px;padding:7px 13px;transition:.15s}
+  .aolinks a:hover{border-color:color-mix(in srgb,var(--hi) 45%,var(--line-2));color:var(--hi)}
   .ao-status{color:var(--muted);font-size:14px;margin-bottom:14px}
+  .ao-status b{color:var(--text)}
   .loader{display:inline-block;width:16px;height:16px;border:2px solid var(--line-2);border-top-color:var(--hi);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-3px;margin-right:8px}
   @keyframes spin{to{transform:rotate(360deg)}}
   .ao-list{display:grid;gap:14px}
   .ao{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:18px 22px;transition:.16s}
   .ao:hover{border-color:color-mix(in srgb,var(--hi) 40%,var(--line-2))}
-  .ao .aoh{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+  .ao .aoh{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
   .ao h3{font-size:16px;font-weight:700;line-height:1.35;flex:1;min-width:0}
-  .ao .meta{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--muted-2)}
-  .ao .meta b{color:var(--text)}
-  .ao .buyer{color:var(--muted);font-size:13.5px;margin-top:4px}
+  .ao .buyer{color:var(--muted);font-size:13.5px;margin-top:5px}
+  .ao .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .ao .tag{font-size:12px;color:var(--muted);border:1px solid var(--line-2);border-radius:999px;padding:4px 11px;background:var(--surface-2)}
+  .ao .tag b{color:var(--text);font-weight:650}
+  .ao .tag.dl{color:var(--hi);border-color:color-mix(in srgb,var(--hi) 40%,transparent);background:color-mix(in srgb,var(--hi) 10%,transparent)}
+  .ao .tag.dl b{color:var(--hi)}
   .ao .go{white-space:nowrap;font-size:13px}
+  .ao details{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+  .ao details summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);list-style:none;display:inline-flex;align-items:center;gap:6px}
+  .ao details summary::-webkit-details-marker{display:none}
+  .ao details summary::before{content:"▸";color:var(--hi);transition:.15s}
+  .ao details[open] summary::before{transform:rotate(90deg)}
+  .ao details summary:hover{color:var(--text)}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin-top:12px;font-size:13px}
+  .kv dt{color:var(--muted-2);font-weight:600;white-space:nowrap}
+  .kv dd{color:var(--text);word-break:break-word}
+  .kv dd a{color:var(--hi)}
+  .morewrap{text-align:center;margin-top:22px}
+  @media (max-width:640px){ .aotop{grid-template-columns:1fr 1fr} .aotop .btn{grid-column:1/-1} }
 </style>
 </head>
 <body>
@@ -43,117 +63,179 @@
 
 <div class="pagehead"><div class="wrap">
   <div class="crumb"><a href="../index.html">Accueil</a> / Appels d'offres publics</div>
-  <h1>Appels d'offres — Travaux en Île-de-France</h1>
-  <p>Les marchés publics de travaux en Île-de-France, issus de la source officielle <strong>BOAMP</strong> (open data), chargés en direct.</p>
+  <h1>Appels d'offres publics — Travaux</h1>
+  <p>Les marchés publics de l'<strong>État</strong>, des collectivités et des établissements publics, issus de la source officielle <strong>BOAMP</strong> (open data), chargés en direct. Recherche nationale, toutes les informations de chaque avis.</p>
 </div></div>
 
 <section><div class="wrap">
   <div class="info">
-    🏛️ <b>Données officielles &amp; publiques.</b> Cette liste provient de l'API open data du <b>BOAMP</b> (Bulletin officiel des annonces des marchés publics), une source publique et réutilisable. Chaque annonce renvoie vers son <b>avis officiel</b>. Aucune donnée n'est copiée d'un site tiers.
+    🏛️ <b>Données officielles &amp; publiques.</b> Cette liste provient de l'API open data du <b>BOAMP</b> (Bulletin officiel des annonces des marchés publics), qui diffuse les avis pour l'État, l'armée, les collectivités et leurs établissements publics. Chaque annonce renvoie vers son <b>avis officiel</b>. Les consultations de la plateforme <b>PLACE</b> (marchés de l'État) sont publiées au BOAMP et donc incluses ici. Aucune donnée n'est copiée d'un site tiers.
   </div>
 
   <div class="aotop">
-    <select class="selectbox" id="dept">
-      <option value="">Toute l'Île-de-France</option>
-      <option value="75">Paris (75)</option>
-      <option value="77">Seine-et-Marne (77)</option>
-      <option value="78">Yvelines (78)</option>
-      <option value="91">Essonne (91)</option>
-      <option value="92">Hauts-de-Seine (92)</option>
-      <option value="93">Seine-Saint-Denis (93)</option>
-      <option value="94">Val-de-Marne (94)</option>
-      <option value="95">Val-d'Oise (95)</option>
-    </select>
-    <button class="btn btn-ghost" id="refresh">↻ Actualiser</button>
-    <a class="btn btn-ghost" href="https://www.boamp.fr/pages/recherche/" target="_blank" rel="noopener">Recherche officielle BOAMP ↗</a>
+    <input id="q" type="text" value="travaux" placeholder="Mot-clé : rénovation, école, voirie, toiture, État…">
+    <input id="dept" type="text" inputmode="numeric" placeholder="Département (ex. 75)">
+    <button class="btn btn-hi" id="refresh">Rechercher</button>
+  </div>
+  <div class="aolinks">
+    <a href="#" id="quick-etat">🏛️ Marchés type « État »</a>
+    <a href="#" id="quick-reno">🔨 Rénovation</a>
+    <a href="#" id="quick-toiture">🏠 Toiture / couverture</a>
+    <a href="https://www.marches-publics.gouv.fr/" target="_blank" rel="noopener">PLACE — marchés de l'État ↗</a>
+    <a href="https://www.boamp.fr/pages/recherche/" target="_blank" rel="noopener">Recherche officielle BOAMP ↗</a>
   </div>
 
   <div class="ao-status" id="status"><span class="loader"></span> Chargement des appels d'offres…</div>
   <div class="ao-list" id="list"></div>
-</div></section>
+  <div class="morewrap" id="morewrap" hidden><button class="btn btn-ghost" id="more">Charger plus d'avis</button></div>
+</div></div></section>
 
 <footer class="site"><div class="wrap foot-bot" style="border-top:none;margin-top:0"><p>© 2026 BâtiLink — une activité du cabinet AEM-CONSEIL.</p><p class="mono">SOURCE : BOAMP · OPEN DATA</p></div></footer>
 
 <script src="../assets/js/batilink.js"></script>
 <script>
 (function(){
-  var IDF = ["75","77","78","91","92","93","94","95"];
   var API = "https://boamp-datadila.opendatasoft.com/api/explore/v2.1/catalog/datasets/boamp/records";
+  var PAGE = 30;
   var statusEl = document.getElementById('status');
   var listEl = document.getElementById('list');
-  var deptSel = document.getElementById('dept');
+  var moreWrap = document.getElementById('morewrap');
+  var moreBtn = document.getElementById('more');
+  var qEl = document.getElementById('q');
+  var deptEl = document.getElementById('dept');
+  var offset = 0, total = 0, loading = false;
 
-  function pick(o){ for(var i=1;i<arguments.length;i++){ var k=arguments[i]; if(o[k]!=null && o[k]!=='') return o[k]; } return ''; }
+  function pick(o){ for(var i=1;i<arguments.length;i++){ var k=arguments[i]; if(o && o[k]!=null && o[k]!=='') return o[k]; } return ''; }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
   function fmtDate(d){ if(!d) return ''; try{ var dt=new Date(d); if(isNaN(dt)) return String(d); return dt.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}); }catch(e){ return String(d); } }
 
   function notice(r){
-    // Identifiant de l'avis pour reconstruire le lien officiel
-    var id = pick(r,'idweb','id_web','id','identifiant','id_avis');
+    var id = pick(r,'idweb','id_web','id','identifiant','id_avis','nodeboamp');
     if(id) return 'https://www.boamp.fr/avis/detail/'+encodeURIComponent(id);
     var url = pick(r,'url_avis','url','lien');
     return url || 'https://www.boamp.fr/pages/recherche/';
   }
 
-  function render(rows){
-    if(!rows.length){ statusEl.textContent = 'Aucun appel d\'offres trouvé pour ce filtre. Élargissez la sélection ou consultez la recherche officielle BOAMP.'; listEl.innerHTML=''; return; }
-    statusEl.innerHTML = '<b>'+rows.length+'</b> appel(s) d\'offres · Travaux · Île-de-France — source BOAMP';
-    listEl.innerHTML = rows.map(function(r){
-      var objet = pick(r,'objet','libelle_objet','intitule','titre','title') || 'Avis de marché — Travaux';
-      var acheteur = pick(r,'nom_acheteur','nomacheteur','acheteur','organisme','nom_organisme','entite');
-      var dept = pick(r,'code_departement','departement','dept','lieu_execution_code');
-      var dlr = pick(r,'datelimitereponse','date_limite_reponse','date_limite','dlro','datelimite');
-      var type = pick(r,'type_avis','nature_avis','famille_libelle','nature');
-      return '<article class="ao"><div class="aoh"><h3>'+esc(objet)+'</h3>'+
-        '<a class="btn btn-hi go" href="'+notice(r)+'" target="_blank" rel="noopener">Voir l\'avis ↗</a></div>'+
-        (acheteur?'<div class="buyer">🏢 '+esc(acheteur)+'</div>':'')+
-        '<div class="meta">'+
-          (dept?'<span>📍 <b>Dép. '+esc(dept)+'</b></span>':'')+
-          (dlr?'<span>⏱️ Limite : <b>'+esc(fmtDate(dlr))+'</b></span>':'')+
-          (type?'<span>'+esc(type)+'</span>':'')+
-        '</div></article>';
-    }).join('');
+  // Libellés lisibles pour le dépliant « toutes les informations »
+  var LABELS = {
+    idweb:'Identifiant', dateparution:'Date de parution', datefindiffusion:'Fin de diffusion',
+    datelimitereponse:'Date limite de réponse', objet:'Objet', nomacheteur:'Acheteur',
+    code_departement:'Département', type_marche:'Type de marché', nature:'Nature', famille:'Famille',
+    famille_libelle:'Famille', type_avis:'Type d\'avis', nature_categorise_libelle:'Nature',
+    descripteur_libelle:'Descripteurs', descripteur_code:'Codes descripteurs', perimetre:'Périmètre',
+    procedure_categorise:'Procédure', procedure_libelle:'Procédure', criteres:'Critères',
+    marche_public_simplifie:'Marché public simplifié', code_postal:'Code postal', ville:'Ville',
+    departement:'Département', region:'Région', annonces_anterieures:'Annonces antérieures',
+    etat:'État de l\'avis', gestion:'Gestion', titulaire:'Titulaire', montant:'Montant'
+  };
+  function labelFor(k){ return LABELS[k] || (k.charAt(0).toUpperCase()+k.slice(1).replace(/_/g,' ')); }
+
+  // Rendu générique de TOUS les champs scalaires/simples d'un enregistrement
+  function fullInfo(r){
+    var rows = [];
+    Object.keys(r).forEach(function(k){
+      var v = r[k];
+      if(v==null || v==='') return;
+      var text;
+      if(Array.isArray(v)){
+        if(!v.length) return;
+        if(typeof v[0]==='object') return;            // tableaux d'objets : trop volumineux
+        text = v.map(String).join(', ');
+      } else if(typeof v==='object'){
+        return;                                        // objets imbriqués : on les ignore ici
+      } else {
+        text = String(v);
+      }
+      if(text.length>600) text = text.slice(0,600)+'…';
+      if(/date/.test(k) && /^\d{4}-\d{2}-\d{2}/.test(text)) text = fmtDate(text);
+      rows.push('<dt>'+esc(labelFor(k))+'</dt><dd>'+esc(text)+'</dd>');
+    });
+    if(!rows.length) return '';
+    return '<details><summary>Toutes les informations de l\'avis</summary><dl class="kv">'+rows.join('')+'</dl></details>';
+  }
+
+  function card(r){
+    var objet = pick(r,'objet','libelle_objet','intitule','titre','title') || 'Avis de marché — Travaux';
+    var acheteur = pick(r,'nomacheteur','nom_acheteur','acheteur','organisme','nom_organisme','entite');
+    var dept = pick(r,'code_departement','departement','dept','lieu_execution_code');
+    var ville = pick(r,'ville','commune','lieu_execution');
+    var dparu = pick(r,'dateparution','date_parution','datepublication');
+    var dlr = pick(r,'datelimitereponse','date_limite_reponse','date_limite','dlro','datelimite');
+    var nature = pick(r,'nature_categorise_libelle','type_marche','famille_libelle','nature','type_avis');
+    var proc = pick(r,'procedure_categorise','procedure_libelle','procedure');
+    var meta = '';
+    if(nature) meta += '<span class="tag"><b>'+esc(nature)+'</b></span>';
+    if(proc) meta += '<span class="tag">'+esc(proc)+'</span>';
+    if(dept) meta += '<span class="tag">📍 Dép. <b>'+esc(dept)+'</b>'+(ville?' · '+esc(ville):'')+'</span>';
+    if(dparu) meta += '<span class="tag">Publié le '+esc(fmtDate(dparu))+'</span>';
+    if(dlr) meta += '<span class="tag dl">⏱️ Limite : <b>'+esc(fmtDate(dlr))+'</b></span>';
+    return '<article class="ao">'+
+      '<div class="aoh"><h3>'+esc(objet)+'</h3>'+
+        '<a class="btn btn-hi go" href="'+notice(r)+'" target="_blank" rel="noopener">Voir l\'avis officiel ↗</a></div>'+
+      (acheteur?'<div class="buyer">🏢 '+esc(acheteur)+'</div>':'')+
+      (meta?'<div class="meta">'+meta+'</div>':'')+
+      fullInfo(r)+
+    '</article>';
   }
 
   function normalize(data){
-    if(data && Array.isArray(data.results)) return data.results;              // Explore v2.1
-    if(data && Array.isArray(data.records)) return data.records.map(function(x){ return x.fields || x.record && x.record.fields || x; }); // v1 / v2.0
+    if(data && Array.isArray(data.results)) return data.results;
+    if(data && Array.isArray(data.records)) return data.records.map(function(x){ return x.fields || (x.record && x.record.fields) || x; });
     return [];
   }
 
-  function inIDF(r){
-    var d = String(pick(r,'code_departement','departement','dept','lieu_execution_code')||'');
-    if(!d) return true; // si le champ n'existe pas, on n'exclut pas
-    return IDF.some(function(x){ return d.indexOf(x)!==-1; });
+  function buildWhere(){
+    var terms = [];
+    var q = (qEl.value||'').trim();
+    if(q) terms.push('search("'+q.replace(/"/g,'')+'")');
+    var d = (deptEl.value||'').trim();
+    if(d) terms.push('search("'+d.replace(/"/g,'')+'")'); // tolérant : le n° de dép. apparaît dans plusieurs champs
+    return terms.length ? terms.join(' and ') : 'search("travaux")';
   }
 
-  function load(){
+  function fetchPage(reset){
+    if(loading) return; loading = true;
+    if(reset){ offset = 0; listEl.innerHTML=''; }
     statusEl.innerHTML = '<span class="loader"></span> Chargement des appels d\'offres…';
-    listEl.innerHTML='';
-    // Recherche : travaux, triés par parution récente. On filtre l'IDF côté client
-    // (les noms de champs BOAMP peuvent varier, on reste tolérant).
     var params = new URLSearchParams();
-    params.set('limit','40');
+    params.set('limit', String(PAGE));
+    params.set('offset', String(offset));
     params.set('order_by','dateparution desc');
-    params.set('where', 'search("travaux")');
+    params.set('where', buildWhere());
     fetch(API + '?' + params.toString(), { headers:{'Accept':'application/json'} })
       .then(function(res){ if(!res.ok) throw new Error('HTTP '+res.status); return res.json(); })
       .then(function(data){
-        var rows = normalize(data).filter(inIDF);
-        var chosen = deptSel.value;
-        if(chosen) rows = rows.filter(function(r){ return String(pick(r,'code_departement','departement','dept','lieu_execution_code')||'').indexOf(chosen)!==-1; });
-        render(rows.slice(0,25));
+        total = (data && (data.total_count!=null?data.total_count:data.nhits)) || 0;
+        var rows = normalize(data);
+        rows.forEach(function(r){ listEl.insertAdjacentHTML('beforeend', card(r)); });
+        offset += rows.length;
+        if(offset===0 || (rows.length===0 && listEl.children.length===0)){
+          statusEl.textContent = 'Aucun appel d\'offres trouvé pour cette recherche. Essayez un autre mot-clé ou élargissez la zone.';
+        } else {
+          statusEl.innerHTML = '<b>'+listEl.children.length+'</b> avis affiché(s)'+(total?' sur <b>'+total+'</b> résultats':'')+' — source BOAMP (open data)';
+        }
+        moreWrap.hidden = !(total && offset < total);
+        loading = false;
       })
       .catch(function(err){
-        statusEl.innerHTML = '⚠️ Impossible de charger les appels d\'offres en direct pour le moment '+
-          '('+esc(err.message)+'). Vous pouvez consulter la source officielle : '+
-          '<a href="https://www.boamp.fr/pages/recherche/" target="_blank" rel="noopener" style="color:var(--hi);font-weight:600">recherche BOAMP ↗</a>.';
+        loading = false;
+        statusEl.innerHTML = '⚠️ Impossible de charger les appels d\'offres en direct pour le moment ('+esc(err.message)+'). '+
+          'Consultez directement les sources officielles : '+
+          '<a href="https://www.boamp.fr/pages/recherche/" target="_blank" rel="noopener" style="color:var(--hi);font-weight:600">BOAMP ↗</a> · '+
+          '<a href="https://www.marches-publics.gouv.fr/" target="_blank" rel="noopener" style="color:var(--hi);font-weight:600">PLACE ↗</a>.';
       });
   }
 
-  document.getElementById('refresh').addEventListener('click', load);
-  deptSel.addEventListener('change', load);
-  load();
+  function search(){ fetchPage(true); }
+  document.getElementById('refresh').addEventListener('click', search);
+  moreBtn.addEventListener('click', function(){ fetchPage(false); });
+  [qEl, deptEl].forEach(function(el){ el.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); search(); } }); });
+  function quick(id, q, d){ var el=document.getElementById(id); if(el) el.addEventListener('click', function(e){ e.preventDefault(); qEl.value=q; deptEl.value=d||''; search(); }); }
+  quick('quick-etat','travaux ministère préfecture');
+  quick('quick-reno','rénovation travaux');
+  quick('quick-toiture','toiture couverture travaux');
+
+  search();
 })();
 </script>
 </body>
