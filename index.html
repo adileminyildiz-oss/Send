@@ -283,7 +283,8 @@
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Profil mis en avant + avis</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Accompagnement aides &amp; financement</li>
         </ul>
-        <a class="btn btn-hi" href="compte/index.html">Choisir Pro</a>
+        <button type="button" class="btn btn-hi" id="ctaProAbo">S'abonner</button>
+        <p style="font-size:12.5px;color:var(--muted-2);margin-top:10px;line-height:1.5">Sans engagement, résiliable en ligne à tout moment. Le paiement s'effectue de façon sécurisée sur Stripe (commande avec obligation de paiement).</p>
       </div>
       <div class="plan reveal">
         <h4>Entreprise</h4>
@@ -345,5 +346,24 @@
 </footer>
 
 <script src="assets/js/batilink.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/billing.js"></script>
+<script>
+'use strict';
+// Branche le bouton « S'abonner » (plan Pro) sur BLBilling.startCheckout().
+// Dégrade gracieusement : si BLBilling est absent, on renvoie vers la page compte.
+(function () {
+  var btn = document.getElementById('ctaProAbo');
+  if (!btn) return;
+  btn.addEventListener('click', function () {
+    if (window.BLBilling && typeof window.BLBilling.startCheckout === 'function') {
+      window.BLBilling.startCheckout();
+    } else {
+      window.location.href = 'compte/index.html';
+    }
+  });
+})();
+</script>
 </body>
 </html>
