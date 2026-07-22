@@ -246,6 +246,30 @@
         <div id="docsList" class="mini-list"></div>
       </div>
 
+      <!-- Gestion : clients & dépenses -->
+      <div class="panel">
+        <div class="panel-head"><h2><span class="e">📊</span> Gestion (clients &amp; dépenses)</h2>
+          <a class="btn btn-ghost" href="../gestion/index.html">Ouvrir la gestion</a>
+        </div>
+        <div class="stats" id="gesStats">
+          <div class="stat">
+            <div class="lab">Clients</div>
+            <div class="num" id="gesClients">—</div>
+            <div class="hint">fiches suivies</div>
+          </div>
+          <div class="stat">
+            <div class="lab">Dépenses (TTC)</div>
+            <div class="num" id="gesDepenses">—</div>
+            <div class="hint">total des achats</div>
+          </div>
+          <div class="stat">
+            <div class="lab">Marge estimée</div>
+            <div class="num" id="gesMarge">—</div>
+            <div class="hint">CA encaissé − dépenses</div>
+          </div>
+        </div>
+      </div>
+
       <!-- 5. Ma conformité -->
       <div class="panel">
         <div class="panel-head"><h2><span class="e">🛡️</span> Ma conformité</h2>
@@ -269,6 +293,7 @@
 <script src="../assets/js/config.js"></script>
 <script src="../assets/js/db.js"></script>
 <script src="../assets/js/docs.js"></script>
+<script src="../assets/js/gestion.js"></script>
 <script src="../assets/js/billing.js"></script>
 <script src="../assets/js/batilink.js"></script>
 <script>
@@ -487,6 +512,37 @@
     }).catch(function () { wrap.innerHTML = docsEmpty(); });
   }
 
+  // --- Gestion : clients & dépenses (Supabase via BLGestion + BLDocs) ---
+  function renderGestion() {
+    var cEl = $('gesClients'), dEl = $('gesDepenses'), mEl = $('gesMarge');
+    if (!cEl) return;
+    if (!(window.BLGestion && window.BLGestion.ready)) {
+      cEl.textContent = '—'; dEl.textContent = '—'; mEl.textContent = '—';
+      return;
+    }
+    window.BLGestion.summary().then(function (s) {
+      s = s || { nbClients: 0, totalDepensesTTC: 0 };
+      cEl.textContent = s.nbClients;
+      dEl.textContent = euro(s.totalDepensesTTC);
+      // Marge = CA encaissé (factures payées) − dépenses TTC.
+      if (!(window.BLDocs && window.BLDocs.ready)) { mEl.textContent = '—'; return; }
+      window.BLDocs.listDocs({ type: 'facture' }).then(function (rows) {
+        var ca = 0;
+        (rows || []).forEach(function (f) {
+          if (f && f.statut === 'payé') {
+            var t = parseFloat(f.total_ttc);
+            if (isFinite(t)) ca += t;
+          }
+        });
+        var marge = ca - s.totalDepensesTTC;
+        mEl.textContent = euro(marge);
+        mEl.className = 'num' + (marge > 0 ? ' okc' : (marge < 0 ? ' negc' : ''));
+      }).catch(function () { mEl.textContent = '—'; });
+    }).catch(function () {
+      cEl.textContent = '—'; dEl.textContent = '—'; mEl.textContent = '—';
+    });
+  }
+
   // --- Profil pro (par utilisateur) ---
   function profileKey(userId) { return 'batilink_profil_' + userId; }
   function fillProfile(p) {
@@ -620,6 +676,7 @@
     renderFavoris();
     renderDepots();
     renderDocs();
+    renderGestion();
     renderAbonnement();
     if (!boundOnce) { bindProfile(user.id); boundOnce = true; }
     showDash();
