@@ -108,7 +108,7 @@
   <a href="../recherche/index.html?type=artisans">Artisans</a>
   <a href="../recherche/index.html?type=sous-traitance">Sous-traitance</a>
   <div class="sep"></div>
-  <div class="cta"><a class="btn btn-hi" href="../conformite/index.html">Conformité</a></div>
+  <div class="cta"><a class="btn btn-hi" href="../conformite/index.html">Documents</a></div>
 </nav>
 
 <div class="pagehead">
@@ -159,9 +159,9 @@
           <div class="hint">projets publiés</div>
         </div>
         <div class="stat">
-          <div class="lab">Conformité</div>
-          <div class="num" id="statDoc">0<small>/0</small></div>
-          <div class="hint">documents à jour</div>
+          <div class="lab">Documents</div>
+          <div class="num" id="statDoc">0</div>
+          <div class="hint">demandes envoyées</div>
         </div>
       </div>
 
@@ -270,12 +270,12 @@
         </div>
       </div>
 
-      <!-- 5. Ma conformité -->
+      <!-- 5. Mes demandes de documents -->
       <div class="panel">
-        <div class="panel-head"><h2><span class="e">🛡️</span> Ma conformité</h2>
-          <a class="btn btn-ghost" href="../conformite/index.html">Gérer mes documents</a>
+        <div class="panel-head"><h2><span class="e">📄</span> Mes demandes de documents</h2>
+          <a class="btn btn-ghost" href="../conformite/index.html">Demander un document</a>
         </div>
-        <p id="confSummary" style="color:var(--muted);font-size:14.5px">Aucun document suivi pour l'instant.</p>
+        <p id="confSummary" style="color:var(--muted);font-size:14.5px">Aucune demande pour l'instant.</p>
       </div>
 
     </div>
@@ -293,6 +293,7 @@
 <script src="../assets/js/config.js"></script>
 <script src="../assets/js/db.js"></script>
 <script src="../assets/js/docs.js"></script>
+<script src="../assets/js/demandes.js"></script>
 <script src="../assets/js/gestion.js"></script>
 <script src="../assets/js/billing.js"></script>
 <script src="../assets/js/batilink.js"></script>
@@ -331,37 +332,45 @@
   function showGate() { elLoading.hidden = true; elDash.hidden = true; elGate.hidden = false; }
   function showDash() { elLoading.hidden = true; elGate.hidden = true; elDash.hidden = false; }
 
-  // --- Rendu des stats de synthèse ---
+  // --- Rendu des stats de synthèse (favoris + chantiers) ---
   function renderStats(userId) {
     var favs = readJSON('batilink_favoris', []);
     if (!Array.isArray(favs)) favs = [];
     var deps = readJSON('batilink_depots', []);
     if (!Array.isArray(deps)) deps = [];
-    var docs = readJSON('batilink_docs_' + userId, null);
 
     $('statFav').textContent = favs.length;
     $('statDep').textContent = deps.length;
+  }
 
-    var aJour = 0, total = 0;
-    if (docs && typeof docs === 'object') {
-      if (typeof docs.aJour === 'number' && typeof docs.total === 'number') {
-        aJour = docs.aJour; total = docs.total;
-      } else if (Array.isArray(docs)) {
-        total = docs.length;
-        aJour = docs.filter(function (d) { return d && (d.aJour || d.ok || d.valide); }).length;
+  // --- Mes demandes de documents (Supabase via BLDemandes) ---
+  var STATUTS = {
+    soumise: 'Soumise', en_traitement: 'En traitement', envoyee: 'Envoyée', refusee: 'Refusée'
+  };
+  function renderDemandes() {
+    var sd = $('statDoc'), cs = $('confSummary');
+    if (!(window.BLDemandes && window.BLDemandes.ready)) {
+      if (sd) { sd.textContent = '0'; sd.className = 'num'; }
+      if (cs) cs.textContent = 'Aucune demande pour l\'instant. Demandez un document à notre équipe : nous vous l\'envoyons après traitement.';
+      return;
+    }
+    window.BLDemandes.listDemandes().then(function (rows) {
+      if (!Array.isArray(rows)) rows = [];
+      if (sd) { sd.textContent = rows.length; sd.className = 'num' + (rows.length > 0 ? ' okc' : ''); }
+      if (cs) {
+        if (!rows.length) {
+          cs.textContent = 'Aucune demande pour l\'instant. Demandez un document à notre équipe : nous vous l\'envoyons après traitement.';
+        } else {
+          var last = rows[0] || {};
+          var lab = STATUTS[last.statut] || 'Soumise';
+          cs.innerHTML = '<b style="color:var(--text)">' + rows.length + '</b> demande(s) — dernière : « ' +
+            esc(last.type_document || 'Document') + ' » <span style="color:var(--muted-2)">(' + lab + ')</span>.';
+        }
       }
-    }
-    var sd = $('statDoc');
-    sd.innerHTML = aJour + '<small>/' + total + '</small>';
-    sd.className = 'num' + (total > 0 ? (aJour >= total ? ' okc' : (aJour === 0 ? ' negc' : '')) : '');
-
-    var cs = $('confSummary');
-    if (total > 0) {
-      cs.innerHTML = '<b style="color:var(--text)">' + aJour + ' / ' + total + '</b> documents à jour.' +
-        (aJour < total ? ' Il reste des pièces à mettre à jour.' : ' Tout est en règle 🎉');
-    } else {
-      cs.textContent = 'Aucun document suivi pour l\'instant. Renseignez vos attestations et assurances pour rassurer vos clients.';
-    }
+    }).catch(function () {
+      if (sd) { sd.textContent = '0'; sd.className = 'num'; }
+      if (cs) cs.textContent = 'Aucune demande pour l\'instant.';
+    });
   }
 
   // --- Rendu des favoris ---
@@ -673,6 +682,7 @@
     $('ava').textContent = initial;
     loadProfile(user.id);
     renderStats(user.id);
+    renderDemandes();
     renderFavoris();
     renderDepots();
     renderDocs();
