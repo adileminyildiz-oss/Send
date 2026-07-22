@@ -238,6 +238,14 @@
         <div id="depList" class="mini-list"></div>
       </div>
 
+      <!-- Mes devis & factures -->
+      <div class="panel">
+        <div class="panel-head"><h2><span class="e">🧾</span> Mes devis &amp; factures</h2>
+          <a class="btn btn-hi" href="../devis/index.html">Nouveau devis</a>
+        </div>
+        <div id="docsList" class="mini-list"></div>
+      </div>
+
       <!-- 5. Ma conformité -->
       <div class="panel">
         <div class="panel-head"><h2><span class="e">🛡️</span> Ma conformité</h2>
@@ -260,6 +268,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../assets/js/config.js"></script>
 <script src="../assets/js/db.js"></script>
+<script src="../assets/js/docs.js"></script>
 <script src="../assets/js/billing.js"></script>
 <script src="../assets/js/batilink.js"></script>
 <script>
@@ -423,6 +432,61 @@
     }).join('');
   }
 
+  // --- Mes devis & factures (Supabase via BLDocs) ---
+  function euro(n) {
+    n = parseFloat(n);
+    if (!isFinite(n)) n = 0;
+    return n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+  }
+  function docsEmpty() {
+    return '<div class="empty-mini">Vous n\'avez pas encore de devis ni de facture.' +
+      '<div><a class="btn btn-hi" href="../devis/index.html">Créer mon premier devis</a></div></div>';
+  }
+  function renderDocs() {
+    var wrap = $('docsList');
+    if (!wrap) return;
+    if (!(window.BLDocs && window.BLDocs.ready)) {
+      wrap.innerHTML = '<div class="empty-mini">L\'enregistrement des devis n\'est pas encore activé. ' +
+        '<a class="hilink" href="../devis/index.html">Créer un devis</a> (impression PDF disponible sans compte).</div>';
+      return;
+    }
+    wrap.innerHTML = '<div class="empty-mini">Chargement…</div>';
+    window.BLDocs.listDocs({}).then(function (rows) {
+      if (!Array.isArray(rows) || !rows.length) { wrap.innerHTML = docsEmpty(); return; }
+      wrap.innerHTML = rows.map(function (d) {
+        d = d || {};
+        var type = (d.type === 'facture') ? 'facture' : 'devis';
+        var isFac = (type === 'facture');
+        var href = '../devis/index.html?id=' + encodeURIComponent(d.id) + '&type=' + type;
+        var typeBadge = '<span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;' +
+          (isFac
+            ? 'color:var(--hi-ink);background:linear-gradient(150deg,var(--hi),var(--hi-2))'
+            : 'color:var(--muted);border:1px solid var(--line-2)') + '">' + (isFac ? 'Facture' : 'Devis') + '</span>';
+        var statut = d.statut ? '<span style="font-size:11.5px;color:var(--muted-2)">' + esc(d.statut) + '</span>' : '';
+        var date = d.date_emission
+          ? new Date(d.date_emission + 'T00:00:00').toLocaleDateString('fr-FR')
+          : (d.created_at ? new Date(d.created_at).toLocaleDateString('fr-FR') : '');
+        var meta = [];
+        if (d.client_nom) meta.push('<b>' + esc(d.client_nom) + '</b>');
+        if (date) meta.push(esc(date));
+        if (statut) meta.push(statut);
+        var title = esc(d.numero || (isFac ? 'Facture' : 'Devis')) +
+          (d.objet ? ' <span style="color:var(--muted-2);font-weight:500">— ' + esc(d.objet) + '</span>' : '');
+        return '<div class="mini">' +
+          '<div class="ic">' + (isFac ? '🧾' : '📄') + '</div>' +
+          '<div class="mmain">' +
+            '<h3><a href="' + href + '">' + title + '</a> ' + typeBadge + '</h3>' +
+            (meta.length ? '<div class="mmeta">' + meta.join('<span>·</span>') + '</div>' : '') +
+          '</div>' +
+          '<div class="mside">' +
+            (d.total_ttc != null ? '<span class="budget">' + euro(d.total_ttc) + ' TTC</span>' : '') +
+            '<a class="btn btn-ghost" style="padding:7px 12px;font-size:13px" href="' + href + '">Ouvrir</a>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }).catch(function () { wrap.innerHTML = docsEmpty(); });
+  }
+
   // --- Profil pro (par utilisateur) ---
   function profileKey(userId) { return 'batilink_profil_' + userId; }
   function fillProfile(p) {
@@ -555,6 +619,7 @@
     renderStats(user.id);
     renderFavoris();
     renderDepots();
+    renderDocs();
     renderAbonnement();
     if (!boundOnce) { bindProfile(user.id); boundOnce = true; }
     showDash();
