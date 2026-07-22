@@ -160,6 +160,10 @@
         </div>
         <div class="field"><label for="coInfo">Adresse / SIRET de l'entreprise</label><input id="coInfo" type="text" value="12 rue des Bâtisseurs, 69003 Lyon — SIRET 812 345 678 00012"></div>
         <div class="field"><label for="clInfo">Adresse du client</label><input id="clInfo" type="text" value="8 allée des Tilleuls, 69100 Villeurbanne"></div>
+        <div class="grid2">
+          <div class="field"><label for="clEmail">E-mail du client</label><input id="clEmail" type="email" placeholder="client@exemple.fr"></div>
+          <div class="field"><label for="objet">Objet du document</label><input id="objet" type="text" placeholder="Ex : rénovation salle de bain"></div>
+        </div>
       </div>
 
       <div class="panel">
@@ -213,6 +217,35 @@ Acompte de 30 % à la commande, solde à la fin des travaux. Prix fermes et non 
         </div>
       </div>
 
+      <div class="panel">
+        <h2><span class="n">6</span> Enregistrement</h2>
+
+        <!-- Hint affiché si non connecté -->
+        <p class="hint" id="saveHint" style="margin-left:33px">Pour enregistrer ce document et retrouver vos devis &amp; factures, <a href="../compte/index.html" style="color:var(--hi);font-weight:600">connectez-vous</a>. Le générateur reste utilisable et imprimable sans compte.</p>
+
+        <!-- Bloc affiché si connecté -->
+        <div id="saveBox" hidden>
+          <div class="grid2">
+            <div class="field"><label for="docStatut">Statut</label>
+              <select id="docStatut">
+                <option value="brouillon">Brouillon</option>
+                <option value="envoyé">Envoyé</option>
+                <option value="accepté">Accepté</option>
+                <option value="facturé">Facturé</option>
+                <option value="payé">Payé</option>
+              </select>
+            </div>
+            <div class="field"><label>Numéro attribué</label>
+              <input id="docNumRO" type="text" value="—" readonly style="font-family:var(--mono);background:var(--surface)"></div>
+          </div>
+          <div class="lines-actions">
+            <button class="btn btn-hi" id="btnSave" type="button">Enregistrer le devis</button>
+            <button class="btn btn-ghost" id="btnConvert" type="button" hidden>Convertir en facture</button>
+          </div>
+          <p class="hint" id="saveMsg" style="margin:12px 0 0 0;display:none"></p>
+        </div>
+      </div>
+
     </div>
 
     <!-- ============ APERÇU ============ -->
@@ -232,7 +265,7 @@ Acompte de 30 % à la commande, solde à la fin des travaux. Prix fermes et non 
             <div class="co-line" id="pCoInfo"></div>
           </div>
           <div class="doc-badge">
-            <div class="lbl">Devis</div>
+            <div class="lbl" id="pTypeLbl">Devis</div>
             <div class="no" id="pNo">DEV-2026-047</div>
             <div class="dt" id="pDate"></div>
           </div>
@@ -241,13 +274,17 @@ Acompte de 30 % à la commande, solde à la fin des travaux. Prix fermes et non 
         <div class="doc-parties">
           <div class="party">
             <div class="role">Émetteur</div>
-            <div class="val"><span class="nm" id="pCoName2">Bâti Rénov Pro</span><span id="pCoInfo2"></span></div>
+            <div class="val"><span class="nm" id="pCoName2">Bâti Rénov Pro</span><span id="pCoInfo2"></span>
+              <span style="display:block;margin-top:6px;font-size:11.5px;color:#5a6b7e">SIREN&nbsp;: <span class="tofill">[à compléter : SIREN]</span> · TVA&nbsp;: <span class="tofill">[à compléter : n° TVA]</span></span>
+            </div>
           </div>
           <div class="party">
             <div class="role">Client</div>
             <div class="val"><span class="nm" id="pClName">M. et Mme Durand</span><span id="pClInfo"></span></div>
           </div>
         </div>
+
+        <div id="pObjetWrap" style="display:none;margin:0 0 14px;font-size:13px;color:#3a4a5c"><b style="color:#141b26">Objet :</b> <span id="pObjet"></span></div>
 
         <table class="pv">
           <thead><tr>
@@ -284,6 +321,10 @@ Acompte de 30 % à la commande, solde à la fin des travaux. Prix fermes et non 
 <footer class="site"><div class="wrap foot-bot" style="border-top:none;margin-top:0"><p>© 2026 BâtiLink — une activité du cabinet AEM-CONSEIL.</p><p class="foot-legal"><a href="../mentions-legales/index.html">Mentions légales</a><a href="../cgu/index.html">CGU</a><a href="../cgv/index.html">CGV</a><a href="../confidentialite/index.html">Confidentialité</a></p></div></footer>
 
 <script src="../assets/js/batilink.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/db.js"></script>
+<script src="../assets/js/docs.js"></script>
 <script>
 'use strict';
 (function(){
@@ -446,6 +487,273 @@ Acompte de 30 % à la commande, solde à la fin des travaux. Prix fermes et non 
     START.forEach(function(l){ addRow(l); });
     render();
   })();
+
+  // Expose une petite API pour la couche de persistance (docs.js / script ci-dessous).
+  // N'altère pas le comportement du générateur : simples accesseurs réutilisables.
+  window.DevisGen = {
+    readLines: readLines,
+    render: render,
+    addRow: addRow,
+    clearRows: function(){ rowsBody.innerHTML = ''; }
+  };
+})();
+</script>
+
+<!-- ============================================================= -->
+<!-- Couche de PERSISTANCE (devis & factures) — dégrade gracieusement -->
+<!-- Sans compte / sans base : le générateur ci-dessus reste intact. -->
+<!-- ============================================================= -->
+<script>
+'use strict';
+(function(){
+  var Gen = window.DevisGen;
+  if(!Gen) return; // sécurité : le générateur doit être présent
+
+  var $ = function(id){ return document.getElementById(id); };
+
+  // État courant du document en cours d'édition.
+  var state = { id: null, type: 'devis', numero: null };
+
+  // --- Type depuis l'URL (?type=facture) --------------------------------
+  var params = new URLSearchParams(window.location.search);
+  var urlType = params.get('type');
+  if(urlType === 'facture') state.type = 'facture';
+  var urlId = params.get('id');
+
+  // --- Libellés dépendant du type (devis / facture) ---------------------
+  function applyType(){
+    var isFac = (state.type === 'facture');
+    var lbl = $('pTypeLbl'); if(lbl) lbl.textContent = isFac ? 'Facture' : 'Devis';
+    var bSave = $('btnSave'); if(bSave) bSave.textContent = isFac ? 'Enregistrer la facture' : 'Enregistrer le devis';
+    // « Convertir en facture » n'a de sens que pour un devis déjà enregistré.
+    var bConv = $('btnConvert');
+    if(bConv) bConv.hidden = !(!isFac && state.id);
+    // Étiquette de date dans l'aperçu : validité (devis) vs échéance (facture).
+    var h1 = document.querySelector('.pagehead h1');
+    if(h1) h1.textContent = isFac ? 'Établissez votre facture' : 'Créez un devis en quelques minutes';
+  }
+
+  // --- Champs additionnels de l'aperçu (objet) --------------------------
+  function updateExtras(){
+    var objet = ($('objet') && $('objet').value.trim()) || '';
+    var wrap = $('pObjetWrap');
+    if(wrap){
+      if(objet){ wrap.style.display = 'block'; $('pObjet').textContent = objet; }
+      else { wrap.style.display = 'none'; $('pObjet').textContent = ''; }
+    }
+  }
+  if($('objet')) $('objet').addEventListener('input', updateExtras);
+  updateExtras();
+
+  // --- Totaux calculés à partir des lignes ------------------------------
+  function computeTotals(){
+    var lines = Gen.readLines().filter(function(l){ return !l.empty; });
+    var ht = 0;
+    lines.forEach(function(l){ ht += (l.total || 0); });
+    var rate = parseFloat($('vat').value) || 0;
+    var tva = ht * rate / 100;
+    return { lignes: lines, ht: ht, tva: tva, ttc: ht + tva, rate: rate };
+  }
+
+  function isoOr(v){ return v ? v : null; }
+  function plusDays(iso, days){
+    if(!iso) return null;
+    var d = new Date(iso + 'T00:00:00');
+    if(isNaN(d.getTime())) return null;
+    d.setDate(d.getDate() + (days||0));
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+
+  // --- Sérialise le document courant depuis le DOM ----------------------
+  function gather(){
+    var t = computeTotals();
+    var dateEm = $('dvDate').value || null;
+    var validite = parseInt($('dvValid').value, 10);
+    var echeance = (state.type === 'facture')
+      ? plusDays(dateEm, 30)
+      : plusDays(dateEm, isFinite(validite) ? validite : 30);
+    return {
+      id: state.id || undefined,
+      type: state.type,
+      numero: state.numero || ($('dvNo').value.trim() || null),
+      client_nom: $('clName').value.trim() || null,
+      client_adresse: $('clInfo').value.trim() || null,
+      client_email: ($('clEmail') && $('clEmail').value.trim()) || null,
+      objet: ($('objet') && $('objet').value.trim()) || null,
+      lignes: t.lignes,
+      tva_taux: t.rate,
+      total_ht: t.ht,
+      total_tva: t.tva,
+      total_ttc: t.ttc,
+      statut: ($('docStatut') && $('docStatut').value) || 'brouillon',
+      notes: $('legal').value.trim() || null,
+      date_emission: dateEm,
+      date_echeance: echeance
+    };
+  }
+
+  function setNumero(n){
+    state.numero = n || null;
+    if(n){
+      $('dvNo').value = n;
+      var ro = $('docNumRO'); if(ro) ro.value = n;
+      Gen.render();
+    }
+  }
+
+  function msg(text, isError){
+    var m = $('saveMsg');
+    if(!m) return;
+    m.style.display = 'block';
+    m.textContent = text;
+    m.style.color = isError ? 'var(--neg)' : 'var(--ok)';
+  }
+
+  // --- Peuple le générateur à partir d'une ligne « documents » ----------
+  function populate(doc){
+    if(!doc) return;
+    state.id = doc.id || null;
+    state.type = (doc.type === 'facture') ? 'facture' : 'devis';
+    state.numero = doc.numero || null;
+
+    if(doc.numero) $('dvNo').value = doc.numero;
+    if(doc.client_nom != null) $('clName').value = doc.client_nom;
+    if(doc.client_adresse != null) $('clInfo').value = doc.client_adresse;
+    if($('clEmail') && doc.client_email != null) $('clEmail').value = doc.client_email;
+    if($('objet') && doc.objet != null) $('objet').value = doc.objet;
+    if(doc.notes != null) $('legal').value = doc.notes;
+    if(doc.date_emission) $('dvDate').value = doc.date_emission;
+    if(doc.tva_taux != null){
+      var vsel = $('vat'); var target = String(doc.tva_taux);
+      for(var i=0;i<vsel.options.length;i++){ if(vsel.options[i].value === target){ vsel.selectedIndex = i; break; } }
+    }
+    if($('docStatut') && doc.statut){ $('docStatut').value = doc.statut; }
+
+    // Reconstruit les lignes.
+    if(Array.isArray(doc.lignes)){
+      Gen.clearRows();
+      if(doc.lignes.length){
+        doc.lignes.forEach(function(l){
+          l = l || {};
+          Gen.addRow({ des: l.des || '', qty: (l.qty != null ? l.qty : ''), unit: l.unit || 'u', pu: (l.pu != null ? l.pu : '') });
+        });
+      } else {
+        Gen.addRow();
+      }
+    }
+
+    var ro = $('docNumRO'); if(ro && doc.numero) ro.value = doc.numero;
+    Gen.render();
+    updateExtras();
+    applyType();
+  }
+
+  // --- Préremplit l'émetteur depuis le profil (si dispo) -----------------
+  function prefillIssuer(){
+    if(!(window.BLDB && window.BLDB.ready && window.BLDB.getProfile)) return;
+    window.BLDB.getProfile().then(function(p){
+      if(!p) return;
+      // Ne remplace que si l'utilisateur n'a pas déjà personnalisé (valeurs par défaut).
+      var coName = $('coName'), coInfo = $('coInfo');
+      if(p.nom && coName){ coName.value = p.nom; }
+      var parts = [];
+      if(p.adresse) parts.push(p.adresse);
+      if(p.ville) parts.push(p.ville);
+      if(p.email) parts.push(p.email);
+      if(parts.length && coInfo){ coInfo.value = parts.join(' — '); }
+      Gen.render();
+    }).catch(function(){});
+  }
+
+  // --- Enregistrement ----------------------------------------------------
+  function doSave(){
+    if(!(window.BLDocs && window.BLDocs.ready)) { msg('Enregistrement indisponible (connexion requise).', true); return; }
+    var btn = $('btnSave'); if(btn){ btn.disabled = true; }
+
+    var proceed = function(){
+      var payload = gather();
+      window.BLDocs.saveDoc(payload).then(function(row){
+        if(btn){ btn.disabled = false; }
+        if(!row){ msg('Échec de l\'enregistrement. Réessayez.', true); return; }
+        state.id = row.id;
+        state.numero = row.numero || state.numero;
+        setNumero(state.numero);
+        // Reflète l'id dans l'URL (permet de recharger / partager).
+        try {
+          var u = new URL(window.location.href);
+          u.searchParams.set('id', row.id);
+          u.searchParams.set('type', state.type);
+          window.history.replaceState(null, '', u.toString());
+        } catch(e){}
+        applyType();
+        msg('✓ ' + (state.type === 'facture' ? 'Facture' : 'Devis') + ' enregistré' + (row.numero ? ' — ' + row.numero : '') + '.', false);
+      }).catch(function(){
+        if(btn){ btn.disabled = false; }
+        msg('Échec de l\'enregistrement. Réessayez.', true);
+      });
+    };
+
+    // Premier enregistrement : attribue un numéro séquentiel.
+    if(!state.numero){
+      window.BLDocs.nextNumber(state.type).then(function(n){
+        if(n){ setNumero(n); }
+        proceed();
+      }).catch(function(){ proceed(); });
+    } else {
+      proceed();
+    }
+  }
+
+  // --- Conversion devis → facture ---------------------------------------
+  function doConvert(){
+    if(!(window.BLDocs && window.BLDocs.ready)){ msg('Conversion indisponible (connexion requise).', true); return; }
+    if(!state.id){ msg('Enregistrez d\'abord le devis avant de le convertir.', true); return; }
+    var btn = $('btnConvert'); if(btn){ btn.disabled = true; }
+    window.BLDocs.convertToInvoice(state.id).then(function(row){
+      if(btn){ btn.disabled = false; }
+      if(!row){ msg('Échec de la conversion. Réessayez.', true); return; }
+      // Ouvre la nouvelle facture.
+      window.location.href = '../devis/index.html?id=' + encodeURIComponent(row.id) + '&type=facture';
+    }).catch(function(){
+      if(btn){ btn.disabled = false; }
+      msg('Échec de la conversion. Réessayez.', true);
+    });
+  }
+
+  if($('btnSave')) $('btnSave').addEventListener('click', doSave);
+  if($('btnConvert')) $('btnConvert').addEventListener('click', doConvert);
+
+  // --- Démarrage : session, chargement éventuel, UI --------------------
+  applyType();
+
+  function showLoggedIn(){
+    var hint = $('saveHint'), box = $('saveBox');
+    if(hint) hint.style.display = 'none';
+    if(box) box.hidden = false;
+  }
+  function showLoggedOut(){
+    var hint = $('saveHint'), box = $('saveBox');
+    if(hint) hint.style.display = '';
+    if(box) box.hidden = true;
+  }
+
+  if(window.BLDocs && window.BLDocs.ready){
+    window.BLDocs.session().then(function(user){
+      if(user){
+        showLoggedIn();
+        prefillIssuer();
+        if(urlId){
+          window.BLDocs.getDoc(urlId).then(function(doc){
+            if(doc){ populate(doc); }
+          }).catch(function(){});
+        }
+      } else {
+        showLoggedOut();
+      }
+    }).catch(function(){ showLoggedOut(); });
+  } else {
+    showLoggedOut();
+  }
 })();
 </script>
 </body>
