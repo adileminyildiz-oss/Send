@@ -47,6 +47,11 @@
     background:color-mix(in srgb,var(--ok) 12%,transparent);border:1px solid color-mix(in srgb,var(--ok) 30%,transparent);color:var(--ok)}
 
   /* Listes favoris / dépôts */
+  .tools{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  .tool{display:flex;align-items:center;gap:10px;padding:13px 14px;border:1px solid var(--line);border-radius:12px;
+    background:var(--surface-2);color:var(--text);font-weight:600;font-size:14px;transition:.15s}
+  .tool:hover{border-color:color-mix(in srgb,var(--hi) 45%,var(--line-2));color:var(--hi);transform:translateY(-2px)}
+  .tool .e{font-size:19px}
   .mini-list{display:grid;gap:12px}
   .mini{border:1px solid var(--line);border-radius:13px;background:var(--surface-2);padding:15px 18px;
     display:flex;gap:14px;align-items:flex-start}
@@ -149,6 +154,24 @@
           <span id="userEmail"></span>
         </div>
         <button class="btn btn-ghost" id="logout">Se déconnecter</button>
+      </div>
+
+      <!-- Lanceur d'outils -->
+      <div class="panel">
+        <div class="panel-head"><h2><span class="e">🧰</span> Mes outils</h2></div>
+        <div class="tools">
+          <a class="tool" href="../recherche/index.html?type=chantiers"><span class="e">🏗️</span> Chantiers</a>
+          <a class="tool" href="../appels-offres/index.html"><span class="e">🏛️</span> Appels d'offres</a>
+          <a class="tool" href="../deposer/index.html"><span class="e">➕</span> Déposer</a>
+          <a class="tool" href="../recherche/index.html?type=artisans"><span class="e">👷</span> Artisans</a>
+          <a class="tool" href="../aides/index.html"><span class="e">💶</span> Aides</a>
+          <a class="tool" href="../devis/index.html"><span class="e">🧾</span> Devis</a>
+          <a class="tool" href="../situations/index.html"><span class="e">📐</span> Situations</a>
+          <a class="tool" href="../gestion/index.html"><span class="e">📊</span> Gestion</a>
+          <a class="tool" href="../conformite/index.html"><span class="e">📄</span> Documents</a>
+          <a class="tool" href="../messages/index.html"><span class="e">💬</span> Messagerie</a>
+          <a class="tool" id="lnkProfil" href="../pro/index.html"><span class="e">👤</span> Mon profil public</a>
+        </div>
       </div>
 
       <!-- Messagerie -->
@@ -717,6 +740,7 @@
     $('userEmail').textContent = user.email || '';
     var initial = (user.email || '?').charAt(0).toUpperCase();
     $('ava').textContent = initial;
+    var lp = $('lnkProfil'); if (lp) lp.href = '../pro/index.html?id=' + encodeURIComponent(user.id);
     loadProfile(user.id);
     renderStats(user.id);
     renderMessagerie();
