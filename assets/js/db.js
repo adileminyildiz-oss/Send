@@ -187,6 +187,19 @@
     }).catch(function () { return null; });
   };
 
+  // Fiche publique d'un pro par son identifiant (id de profiles = id auth.users).
+  // Lecture publique (aucune session requise). Renvoie la ligne ou null, ne
+  // « throw » jamais.
+  BLDB.getProfileById = function (id) {
+    if (!client || !id) return nullVal();
+    try {
+      return client.from('profiles').select('*').eq('id', id).maybeSingle().then(function (res) {
+        if (!res || res.error || !res.data) return null;
+        return res.data;
+      }).catch(function () { return null; });
+    } catch (e) { return nullVal(); }
+  };
+
   // Enregistre (upsert) le profil de l'utilisateur courant. Renvoie la ligne ou null.
   BLDB.saveProfile = function (obj) {
     if (!client) return nullVal();

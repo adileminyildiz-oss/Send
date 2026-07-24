@@ -101,7 +101,9 @@
         '<div class="rdesc">' + it.desc + '</div>' +
         '<div class="rmeta"><span>📍 <b>' + it.ville + '</b></span>' +
           (real ? '' : '<span class="stars-sm">' + stars(it.note) + ' <b>' + it.note + '/5</b></span><span>' + it.avis + ' avis</span>') +
-          (real ? '' : '<a href="' + d + '" style="color:var(--hi);font-weight:600">Voir le profil →</a>') + '</div></div>' +
+          ((real && it._id)
+            ? '<a href="../pro/index.html?id=' + encodeURIComponent(it._id) + '" style="color:var(--hi);font-weight:600">Voir le profil →</a>'
+            : (real ? '' : '<a href="' + d + '" style="color:var(--hi);font-weight:600">Voir le profil →</a>')) + '</div></div>' +
         '<div class="rside"><a class="btn btn-hi" href="' + contactHref + '">Contacter</a></div></article>';
     }
     if (cfg.kind === 'aide') {

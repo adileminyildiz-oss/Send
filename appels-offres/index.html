@@ -45,6 +45,38 @@
   .kv dd{color:var(--text);word-break:break-word}
   .kv dd a{color:var(--hi)}
   .morewrap{text-align:center;margin-top:22px}
+  /* --- Alertes appels d'offres --- */
+  .alertbar{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+    border:1px solid color-mix(in srgb,var(--hi) 30%,var(--line-2));border-radius:14px;
+    background:color-mix(in srgb,var(--hi) 7%,var(--surface));padding:14px 18px;margin-bottom:18px}
+  .alertbar-main{display:flex;gap:13px;align-items:center;min-width:0}
+  .alertbar-ic{font-size:22px;flex:none}
+  .alertbar-txt{font-size:13.5px;line-height:1.4;min-width:0}
+  .alertbar-txt b{display:block;color:var(--text);font-weight:700;font-size:14.5px}
+  .alertbar-txt span{color:var(--muted)}
+  .alertbar-act{flex:none}
+  .alertbar-act .btn{white-space:nowrap}
+  .alert-ok{color:var(--ok);font-size:13.5px;font-weight:600;white-space:nowrap}
+  .myalertes{margin-bottom:22px}
+  .myalertes>details{border:1px solid var(--line-2);border-radius:12px;background:var(--surface);padding:4px 16px}
+  .myalertes>details summary{cursor:pointer;font-size:13.5px;font-weight:600;color:var(--muted);
+    list-style:none;display:inline-flex;align-items:center;gap:6px;padding:10px 0}
+  .myalertes>details summary::-webkit-details-marker{display:none}
+  .myalertes>details summary::before{content:"▸";color:var(--hi);transition:.15s}
+  .myalertes>details[open] summary::before{transform:rotate(90deg)}
+  .myalertes>details summary:hover{color:var(--text)}
+  .alertlist{padding:4px 0 12px}
+  .alert-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:11px 0;border-top:1px solid var(--line)}
+  .alert-row .info-a{flex:1;min-width:0;font-size:13.5px}
+  .alert-row .info-a b{color:var(--text)}
+  .alert-row .info-a .sub{color:var(--muted-2);font-size:12px;margin-top:2px}
+  .alert-row .info-a.off{opacity:.55}
+  .alert-row .tools{display:flex;gap:8px;align-items:center;flex:none}
+  .alert-row .lk{background:none;border:none;cursor:pointer;color:var(--muted);font:inherit;font-size:13px;
+    padding:6px 8px;border-radius:8px}
+  .alert-row .lk:hover{color:var(--text);background:var(--surface-2)}
+  .alert-row .lk.del:hover{color:var(--neg)}
+  .alert-empty{color:var(--muted);font-size:13.5px;padding:10px 0 4px}
   @media (max-width:640px){ .aotop{grid-template-columns:1fr 1fr} .aotop .btn{grid-column:1/-1} }
 </style>
 </head>
@@ -83,6 +115,26 @@
     <a href="#" id="quick-toiture">🏠 Toiture / couverture</a>
     <a href="https://www.marches-publics.gouv.fr/" target="_blank" rel="noopener">PLACE — marchés de l'État ↗</a>
     <a href="https://www.boamp.fr/pages/recherche/" target="_blank" rel="noopener">Recherche officielle BOAMP ↗</a>
+  </div>
+
+  <!-- Alertes email : créer une alerte pour la recherche courante -->
+  <div class="alertbar" id="alertbar" hidden>
+    <div class="alertbar-main">
+      <span class="alertbar-ic">🔔</span>
+      <div class="alertbar-txt">
+        <b>Ne ratez aucun appel d'offres</b>
+        <span>Recevez par email les nouveaux avis correspondant à votre recherche.</span>
+      </div>
+    </div>
+    <div class="alertbar-act" id="alertbarAct"></div>
+  </div>
+
+  <!-- Mes alertes : liste repliable (activer/mettre en pause, supprimer) -->
+  <div class="myalertes" id="myalertes" hidden>
+    <details>
+      <summary>Mes alertes (<span id="alertCount">0</span>)</summary>
+      <div class="alertlist" id="alertlist"></div>
+    </details>
   </div>
 
   <div class="ao-status" id="status"><span class="loader"></span> Chargement des appels d'offres…</div>
@@ -236,6 +288,132 @@
   quick('quick-toiture','toiture couverture travaux');
 
   search();
+})();
+</script>
+
+<!-- Alertes appels d'offres : Supabase (dégradation gracieuse si non configuré) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/db.js"></script>
+<script src="../assets/js/alertes.js"></script>
+<script>
+'use strict';
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var bar = $('alertbar'), act = $('alertbarAct');
+  var myWrap = $('myalertes'), listEl = $('alertlist'), countEl = $('alertCount');
+  if (!bar || !act) return;
+
+  // Sans BLAlertes prêt (supabase-js/clés manquants), on n'affiche rien : la
+  // recherche BOAMP reste 100% fonctionnelle.
+  var A = window.BLAlertes;
+  if (!A || !A.ready) return;
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+  var qEl = $('q'), deptEl = $('dept');
+
+  // --- Bandeau : bouton (connecté) ou lien de connexion (déconnecté) --------
+  function renderConnected() {
+    bar.hidden = false;
+    act.innerHTML = '<button class="btn btn-hi" id="createAlerte">🔔 Créer une alerte pour cette recherche</button>';
+    var btn = $('createAlerte');
+    if (btn) btn.addEventListener('click', createFromSearch);
+    myWrap.hidden = false;
+    refreshList();
+  }
+  function renderLoggedOut() {
+    bar.hidden = false;
+    act.innerHTML = '<a class="btn btn-hi" href="../compte/index.html">🔔 Se connecter pour créer une alerte</a>';
+    myWrap.hidden = true;
+  }
+
+  // --- Création d'une alerte à partir des champs #q + #dept -----------------
+  function createFromSearch() {
+    var btn = $('createAlerte');
+    var mots = (qEl && qEl.value || '').trim();
+    var dept = (deptEl && deptEl.value || '').trim();
+    if (btn) { btn.disabled = true; btn.textContent = 'Enregistrement…'; }
+    A.createAlerte({ mots_cles: mots, departement: dept, frequence: 'quotidienne' })
+      .then(function (row) {
+        if (row) {
+          act.innerHTML = '<span class="alert-ok">✓ Alerte créée — vous serez prévenu par email.</span>';
+          refreshList();
+          if (myWrap.querySelector('details')) myWrap.querySelector('details').open = true;
+          setTimeout(renderConnected, 3500);
+        } else {
+          if (btn) { btn.disabled = false; btn.textContent = '🔔 Créer une alerte pour cette recherche'; }
+          alert("Impossible d'enregistrer l'alerte pour le moment. Réessayez dans un instant.");
+        }
+      })
+      .catch(function () {
+        if (btn) { btn.disabled = false; btn.textContent = '🔔 Créer une alerte pour cette recherche'; }
+      });
+  }
+
+  // --- Liste « Mes alertes » ------------------------------------------------
+  function refreshList() {
+    A.listAlertes().then(function (rows) {
+      rows = rows || [];
+      countEl.textContent = String(rows.length);
+      if (!rows.length) {
+        listEl.innerHTML = '<div class="alert-empty">Vous n\'avez pas encore d\'alerte. ' +
+          'Lancez une recherche ci-dessus puis cliquez sur « Créer une alerte ».</div>';
+        return;
+      }
+      listEl.innerHTML = rows.map(function (r) {
+        r = r || {};
+        var mots = r.mots_cles ? esc(r.mots_cles) : 'travaux';
+        var dep = r.departement ? ' · Dép. ' + esc(r.departement) : '';
+        var actif = (r.actif !== false);
+        var sub = actif ? 'Active — envoi ' + esc(r.frequence || 'quotidienne') : 'En pause';
+        return '' +
+          '<div class="alert-row" data-id="' + esc(r.id) + '">' +
+            '<div class="info-a' + (actif ? '' : ' off') + '">' +
+              '<b>' + mots + '</b>' + dep +
+              '<div class="sub">' + sub + '</div>' +
+            '</div>' +
+            '<div class="tools">' +
+              '<button class="lk" data-act="toggle" data-actif="' + (actif ? '1' : '0') + '">' +
+                (actif ? '⏸ Mettre en pause' : '▶ Réactiver') + '</button>' +
+              '<button class="lk del" data-act="delete">🗑 Supprimer</button>' +
+            '</div>' +
+          '</div>';
+      }).join('');
+    }).catch(function () {});
+  }
+
+  listEl && listEl.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-act]');
+    if (!btn) return;
+    var row = btn.closest('.alert-row');
+    var id = row && row.getAttribute('data-id');
+    if (!id) return;
+    var act2 = btn.getAttribute('data-act');
+    if (act2 === 'toggle') {
+      var makeActif = btn.getAttribute('data-actif') !== '1';
+      btn.disabled = true;
+      A.toggleAlerte(id, makeActif).then(function () { refreshList(); })
+        .catch(function () { btn.disabled = false; });
+    } else if (act2 === 'delete') {
+      if (!confirm('Supprimer cette alerte ?')) return;
+      btn.disabled = true;
+      A.deleteAlerte(id).then(function () { refreshList(); })
+        .catch(function () { btn.disabled = false; });
+    }
+  });
+
+  // --- Session : affiche le bon état, et réagit aux connexions/déconnexions --
+  function apply(user) { if (user) renderConnected(); else renderLoggedOut(); }
+  A.session().then(apply).catch(function () { renderLoggedOut(); });
+  try {
+    if (A.client && A.client.auth && A.client.auth.onAuthStateChange) {
+      A.client.auth.onAuthStateChange(function (_e, session) {
+        apply(session && session.user ? session.user : null);
+      });
+    }
+  } catch (e) {}
 })();
 </script>
 </body>

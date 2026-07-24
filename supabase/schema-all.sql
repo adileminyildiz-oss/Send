@@ -3,9 +3,7 @@
 --
 -- Exécute ce fichier dans Supabase → SQL Editor → New query → Run.
 -- Il regroupe TOUS les schémas de la plateforme, dans le bon ordre, et reste
--- IDEMPOTENT (tu peux le relancer sans risque). Équivaut à exécuter, dans
--- l'ordre : schema.sql, schema-documents.sql, schema-gestion.sql,
--- schema-billing.sql, schema-demandes.sql, schema-messages.sql.
+-- IDEMPOTENT (tu peux le relancer sans risque).
 --
 -- Storage : pense aussi à créer le bucket PRIVÉ « conformite » (Storage).
 -- ===========================================================================
@@ -795,4 +793,339 @@ create index if not exists conversations_last_message_idx
 
 -- Fin du script. ✅ La messagerie interne est prête : les utilisateurs peuvent
 -- se contacter à propos d'un chantier sans dévoiler leurs coordonnées.
+
+
+-- ###########################################################################
+-- # Bloc : schema-avis.sql
+-- ###########################################################################
+
+-- ---------------------------------------------------------------------------
+-- BâtiLink — AVIS CLIENTS (Supabase / PostgreSQL)
+--
+-- À exécuter dans : Supabase → ton projet → SQL Editor → New query → Run.
+-- Ce script est IDEMPOTENT : tu peux le relancer sans risque, il ne casse rien
+-- et ne duplique rien.
+--
+-- Tant que ce script n'est pas exécuté, le site continue de fonctionner : les
+-- fiches pro (pro/index.html) affichent simplement « Aucun avis pour le
+-- moment », et le formulaire d'avis retombe sur un état vide. Une fois exécuté,
+-- les utilisateurs connectés peuvent laisser un avis (note 1-5 + commentaire)
+-- sur la fiche d'un pro, et ces avis sont visibles publiquement.
+--
+-- RÈGLE D'OR RLS : un avis n'est modifiable / supprimable QUE par son auteur.
+-- Personne ne peut écrire un avis au nom de quelqu'un d'autre, et on ne peut
+-- pas s'auto-noter (auteur <> cible).
+-- ---------------------------------------------------------------------------
+
+-- ===========================================================================
+-- 1. TABLE avis — un avis laissé par un utilisateur (auteur) sur un pro (cible).
+--    Un seul avis par couple (cible, auteur) : l'auteur peut le mettre à jour.
+-- ===========================================================================
+create table if not exists public.avis (
+  id           uuid primary key default gen_random_uuid(),
+  cible        uuid not null references auth.users(id) on delete cascade,  -- le pro noté
+  auteur       uuid not null references auth.users(id) on delete cascade,  -- l'auteur de l'avis
+  note         int  not null check (note between 1 and 5),
+  commentaire  text,
+  created_at   timestamptz default now(),
+  unique (cible, auteur)   -- un seul avis par (pro, auteur)
+);
+
+comment on table public.avis is 'Avis clients publics : un utilisateur (auteur) note un pro (cible). Un seul avis par couple (cible, auteur).';
+
+-- ===========================================================================
+-- 2. SÉCURITÉ (Row Level Security)
+--    Lecture publique (avis visibles par tous, même anonymes),
+--    écriture réservée à l'auteur de l'avis (et jamais sur soi-même).
+-- ===========================================================================
+alter table public.avis enable row level security;
+
+-- Lecture par tout le monde (avis publics).
+drop policy if exists "avis_select_public" on public.avis;
+create policy "avis_select_public"
+  on public.avis for select
+  to anon, authenticated
+  using (true);
+
+-- Création : l'auteur est l'utilisateur courant ET on ne se note pas soi-même.
+drop policy if exists "avis_insert_auteur" on public.avis;
+create policy "avis_insert_auteur"
+  on public.avis for insert
+  to authenticated
+  with check (auteur = auth.uid() and auteur <> cible);
+
+-- Mise à jour : réservée à l'auteur de l'avis.
+drop policy if exists "avis_update_auteur" on public.avis;
+create policy "avis_update_auteur"
+  on public.avis for update
+  to authenticated
+  using (auteur = auth.uid())
+  with check (auteur = auth.uid() and auteur <> cible);
+
+-- Suppression : réservée à l'auteur de l'avis.
+drop policy if exists "avis_delete_auteur" on public.avis;
+create policy "avis_delete_auteur"
+  on public.avis for delete
+  to authenticated
+  using (auteur = auth.uid());
+
+-- ===========================================================================
+-- 3. INDEX utile (récupération des avis d'un pro, tri par date).
+-- ===========================================================================
+create index if not exists avis_cible_idx on public.avis (cible, created_at desc);
+
+-- Fin du script. ✅ Les avis clients sont prêts : les fiches pro affichent la
+-- note moyenne et la liste des avis, et les utilisateurs connectés peuvent en
+-- laisser un (un seul par pro, modifiable).
+
+
+-- ###########################################################################
+-- # Bloc : schema-alertes.sql
+-- ###########################################################################
+
+-- ---------------------------------------------------------------------------
+-- BâtiLink — schéma des ALERTES appels d'offres (Supabase / PostgreSQL)
+--
+-- À exécuter dans : Supabase → ton projet → SQL Editor → New query → Run.
+-- Ce script est IDEMPOTENT : tu peux le relancer sans risque, il ne casse rien
+-- et ne duplique rien.
+--
+-- Il ajoute la table des alertes email sur les appels d'offres publics (BOAMP).
+-- Chaque utilisateur connecté peut enregistrer des recherches (mots-clés +
+-- département) et recevoir par email les nouveaux avis correspondants.
+--
+-- Tant que la fonction Edge « alertes-notify » + la clé Resend + le cron ne sont
+-- pas configurés (voir ALERTES-SETUP.md), les alertes sont ENREGISTRÉES mais pas
+-- encore envoyées par email : le site reste pleinement fonctionnel.
+-- ---------------------------------------------------------------------------
+
+-- ===========================================================================
+-- 1. TABLE alertes_ao — une alerte = une recherche sauvegardée par un
+--    utilisateur (mots-clés + département), avec une fréquence d'envoi.
+-- ===========================================================================
+create table if not exists public.alertes_ao (
+  id                 uuid primary key default gen_random_uuid(),
+  owner              uuid not null references auth.users(id) on delete cascade,
+  mots_cles          text,                         -- mots-clés de la recherche (#q)
+  departement        text,                         -- département filtré (#dept), facultatif
+  frequence          text default 'quotidienne',   -- fréquence d'envoi (indicatif)
+  actif              boolean default true,         -- alerte active (envoyée) ou en pause
+  derniere_execution timestamptz,                  -- dernier passage de la notification
+  created_at         timestamptz default now()
+);
+
+comment on table public.alertes_ao is 'Alertes email des utilisateurs sur les appels d''offres publics (BOAMP).';
+comment on column public.alertes_ao.mots_cles is 'Mots-clés de la recherche BOAMP (champ #q de la page appels-offres).';
+comment on column public.alertes_ao.departement is 'Département filtré (champ #dept), facultatif.';
+comment on column public.alertes_ao.frequence is 'Fréquence d''envoi souhaitée (quotidienne / hebdomadaire), indicative.';
+comment on column public.alertes_ao.actif is 'Alerte active : true = surveillée et envoyée, false = en pause.';
+comment on column public.alertes_ao.derniere_execution is 'Horodatage du dernier passage de la fonction de notification.';
+
+-- ===========================================================================
+-- 2. SÉCURITÉ (Row Level Security) — chaque utilisateur ne voit et ne gère QUE
+--    ses propres alertes (owner = auth.uid()).
+-- ===========================================================================
+alter table public.alertes_ao enable row level security;
+
+-- Lecture réservée au propriétaire.
+drop policy if exists "alertes_ao_select_owner" on public.alertes_ao;
+create policy "alertes_ao_select_owner"
+  on public.alertes_ao for select
+  to authenticated
+  using (owner = auth.uid());
+
+-- Création uniquement à son propre nom.
+drop policy if exists "alertes_ao_insert_owner" on public.alertes_ao;
+create policy "alertes_ao_insert_owner"
+  on public.alertes_ao for insert
+  to authenticated
+  with check (owner = auth.uid());
+
+-- Modification (activer/désactiver…) réservée au propriétaire.
+drop policy if exists "alertes_ao_update_owner" on public.alertes_ao;
+create policy "alertes_ao_update_owner"
+  on public.alertes_ao for update
+  to authenticated
+  using (owner = auth.uid())
+  with check (owner = auth.uid());
+
+-- Suppression réservée au propriétaire.
+drop policy if exists "alertes_ao_delete_owner" on public.alertes_ao;
+create policy "alertes_ao_delete_owner"
+  on public.alertes_ao for delete
+  to authenticated
+  using (owner = auth.uid());
+
+-- Remarque : la fonction Edge « alertes-notify » utilise la clé service_role,
+-- qui contourne la RLS pour lire toutes les alertes actives et mettre à jour
+-- derniere_execution. Aucune politique « anon » n'est nécessaire.
+
+-- ===========================================================================
+-- 3. INDEX utiles (récupération par propriétaire, filtrage des alertes actives).
+-- ===========================================================================
+create index if not exists alertes_ao_owner_idx on public.alertes_ao (owner);
+create index if not exists alertes_ao_actif_idx on public.alertes_ao (actif);
+
+-- Fin du script. ✅ Les utilisateurs connectés peuvent maintenant enregistrer
+-- des alertes appels d'offres depuis la page /appels-offres/.
+
+
+-- ###########################################################################
+-- # Bloc : schema-situations.sql
+-- ###########################################################################
+
+-- ---------------------------------------------------------------------------
+-- BâtiLink — SITUATIONS DE TRAVAUX (facturation par avancement) — Supabase / PostgreSQL
+--
+-- À exécuter dans : Supabase → ton projet → SQL Editor → New query → Run.
+-- Ce script est IDEMPOTENT : tu peux le relancer sans risque.
+--
+-- Tant que ce script n'est pas exécuté, le générateur de situations
+-- (situations/index.html) continue de fonctionner localement comme un simple
+-- calculateur (aucun enregistrement). Une fois exécuté, les situations de
+-- travaux sont enregistrées par utilisateur, numérotées séquentiellement
+-- (SIT-2026-0001) et rechargeables via ?id=<uuid>.
+--
+-- CONCEPT — une « situation de travaux » facture l'AVANCEMENT d'un marché :
+--   pour chaque ligne, montant dû = marché × (% cumulé actuel) − cumul déjà
+--   facturé. On applique la TVA, puis on retranche la retenue de garantie
+--   (5 % par défaut) pour obtenir le NET À PAYER.
+-- ---------------------------------------------------------------------------
+
+-- ===========================================================================
+-- 1. TABLE situations — une situation de travaux appartenant à un utilisateur.
+-- ===========================================================================
+create table if not exists public.situations (
+  id                    uuid primary key default gen_random_uuid(),
+  owner                 uuid references auth.users(id) on delete cascade,  -- propriétaire
+  numero                text,              -- ex. SIT-2026-0001
+  chantier              text,              -- nom / référence du chantier
+  client_nom            text,
+  client_adresse        text,
+  objet                 text,              -- objet / intitulé de la situation
+  montant_marche        numeric,           -- montant global du marché (indicatif)
+  lignes                jsonb default '[]', -- lignes (désignation, marché, % cumul, cumul précédent…)
+  tva_taux              numeric default 20,
+  retenue_garantie_taux numeric default 5, -- retenue de garantie (%), 5 % par défaut
+  cumul_precedent       numeric default 0, -- cumul HT facturé lors des situations précédentes (global)
+  avancement_pct        numeric,           -- avancement global cumulé (%) — indicatif
+  total_ht              numeric,           -- montant HT de la présente situation
+  total_ttc             numeric,
+  net_a_payer           numeric,           -- TTC − retenue de garantie
+  statut                text default 'brouillon',  -- brouillon/envoyée/payée
+  date_situation        date,
+  created_at            timestamptz default now(),
+  updated_at            timestamptz default now()
+);
+
+comment on table public.situations is 'Situations de travaux (facturation par avancement) des utilisateurs — privées, propriétaire uniquement.';
+
+-- ===========================================================================
+-- 2. TABLE situation_counters — compteur séquentiel par utilisateur / année.
+--    Sert à attribuer un numéro continu (SIT-2026-0001, SIT-2026-0002…).
+-- ===========================================================================
+create table if not exists public.situation_counters (
+  owner   uuid not null references auth.users(id) on delete cascade,
+  annee   int  not null,
+  dernier int  default 0,
+  primary key (owner, annee)
+);
+
+comment on table public.situation_counters is 'Compteurs de numérotation séquentielle des situations de travaux (par utilisateur et année).';
+
+-- ===========================================================================
+-- 3. SÉCURITÉ (Row Level Security) — accès RÉSERVÉ au propriétaire.
+-- ===========================================================================
+alter table public.situations         enable row level security;
+alter table public.situation_counters enable row level security;
+
+-- --- Politiques situations : propriétaire uniquement (select/insert/update/delete)
+drop policy if exists "situations_select_owner" on public.situations;
+create policy "situations_select_owner"
+  on public.situations for select
+  to authenticated
+  using (owner = auth.uid());
+
+drop policy if exists "situations_insert_owner" on public.situations;
+create policy "situations_insert_owner"
+  on public.situations for insert
+  to authenticated
+  with check (owner = auth.uid());
+
+drop policy if exists "situations_update_owner" on public.situations;
+create policy "situations_update_owner"
+  on public.situations for update
+  to authenticated
+  using (owner = auth.uid())
+  with check (owner = auth.uid());
+
+drop policy if exists "situations_delete_owner" on public.situations;
+create policy "situations_delete_owner"
+  on public.situations for delete
+  to authenticated
+  using (owner = auth.uid());
+
+-- --- Politiques situation_counters : propriétaire uniquement ------------------
+drop policy if exists "situation_counters_select_owner" on public.situation_counters;
+create policy "situation_counters_select_owner"
+  on public.situation_counters for select
+  to authenticated
+  using (owner = auth.uid());
+
+drop policy if exists "situation_counters_insert_owner" on public.situation_counters;
+create policy "situation_counters_insert_owner"
+  on public.situation_counters for insert
+  to authenticated
+  with check (owner = auth.uid());
+
+drop policy if exists "situation_counters_update_owner" on public.situation_counters;
+create policy "situation_counters_update_owner"
+  on public.situation_counters for update
+  to authenticated
+  using (owner = auth.uid())
+  with check (owner = auth.uid());
+
+-- ===========================================================================
+-- 4. FONCTION next_situation_number — attribue atomiquement le prochain numéro.
+--    SECURITY DEFINER : incrémente le compteur de l'utilisateur courant pour
+--    l'année en cours, puis renvoie 'SIT-2026-0001'. La ligne de compteur est
+--    créée si elle manque.
+-- ===========================================================================
+drop function if exists public.next_situation_number();
+create function public.next_situation_number()
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_owner uuid := auth.uid();
+  v_annee int  := extract(year from now())::int;
+  v_num   int;
+begin
+  if v_owner is null then
+    raise exception 'Utilisateur non authentifié';
+  end if;
+
+  -- Incrément atomique (crée la ligne au premier appel).
+  insert into public.situation_counters (owner, annee, dernier)
+  values (v_owner, v_annee, 1)
+  on conflict (owner, annee)
+  do update set dernier = public.situation_counters.dernier + 1
+  returning dernier into v_num;
+
+  return 'SIT-' || v_annee::text || '-' || lpad(v_num::text, 4, '0');
+end;
+$$;
+
+grant execute on function public.next_situation_number() to authenticated;
+
+-- ===========================================================================
+-- 5. INDEX utiles (liste par propriétaire, tri par date).
+-- ===========================================================================
+create index if not exists situations_owner_idx      on public.situations (owner);
+create index if not exists situations_created_at_idx on public.situations (created_at desc);
+
+-- Fin du script. ✅ Les situations de travaux sont maintenant enregistrées,
+-- numérotées séquentiellement et rechargeables (?id=<uuid>).
 
