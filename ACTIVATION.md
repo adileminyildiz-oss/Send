@@ -50,6 +50,18 @@ champs **surlignés** `[à compléter]` : SIREN, TVA, capital, adresse, directeu
 publication, médiateur de la consommation… Envoie-les moi ou remplace-les
 directement. Nécessaires pour être pleinement conforme.
 
+## 8. Alertes appels d'offres par e-mail (option) — voir `ALERTES-SETUP.md`
+
+Pour envoyer aux artisans un e-mail quand un nouvel appel d'offres correspond à
+leur recherche : crée un compte gratuit **Resend**, déploie la fonction
+`supabase functions deploy alertes-notify`, règle le secret `RESEND_API_KEY`, et
+planifie-la une fois par jour (pg_cron). Tant que ce n'est pas fait, les alertes
+sont **enregistrées** mais pas encore envoyées (le reste marche).
+
+> Le fichier `schema-all.sql` de l'étape 1 installe déjà **toutes** les tables des
+> nouvelles briques : profils publics & **avis**, **alertes**, **situations de
+> travaux** (facturation par avancement). Rien de plus à faire côté base.
+
 ---
 
 ## Vérifier que tout marche
@@ -60,6 +72,8 @@ directement. Nécessaires pour être pleinement conforme.
 4. `/conformite/` → demande un document → tu reçois l'e-mail (Formspree).
 5. `/messages/` → depuis un chantier d'un autre compte, clique « Contacter ».
 6. `/gestion/` → ajoute un client et une dépense.
+7. `/situations/` → crée une situation de travaux (facturation par avancement).
+8. `/appels-offres/` → « Créer une alerte » ; `/pro/?id=…` → laisse un avis sur un pro.
 
 Chaque brique bascule automatiquement du mode « exemple » au mode « réel » dès que
 le schéma est installé — aucun autre changement de code nécessaire.
