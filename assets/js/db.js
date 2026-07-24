@@ -75,6 +75,7 @@
       e: metierEmoji(row.metier),
       _real: true,
       _id: row.id || null,
+      owner: row.owner || null,
       contact_email: row.contact_email || '',
       contact_nom: row.contact_nom || '',
       contact_tel: row.contact_tel || ''

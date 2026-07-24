@@ -16,6 +16,7 @@
   // Rangées réelles (chargées depuis Supabase) et état de connexion.
   var realItems = [];
   var loggedIn = false;
+  var currentUserId = null;   // identifiant de l'utilisateur connecté (pour la messagerie)
 
   // Titre + fil d'ariane
   var TITLES = {
@@ -77,8 +78,20 @@
     var realTag = real ? '<span class="pill ok">Réel</span>' : '';
 
     if (cfg.kind === 'artisan') {
-      // Contact d'un pro réel : mailto si email connu, sinon compte.
-      var contactHref = real ? (it.email ? ('mailto:' + it.email) : '../compte/index.html') : d;
+      // Contact d'un pro réel : messagerie interne (sans exposer email/tél).
+      // Le profil d'un pro a pour identifiant l'id de l'utilisateur (it._id).
+      var contactHref;
+      if (real) {
+        if (loggedIn && it._id && String(it._id) !== String(currentUserId)) {
+          contactHref = '../messages/index.html?to=' + encodeURIComponent(it._id);
+        } else if (loggedIn) {
+          contactHref = '../espace/index.html';   // son propre profil / id inconnu
+        } else {
+          contactHref = '../compte/index.html';
+        }
+      } else {
+        contactHref = d;
+      }
       return '<article class="rcard">' +
         '<div class="ric">' + it.e + '</div>' +
         '<div class="rmain"><div class="rtop"><h3>' + titre + '</h3>' +
@@ -102,13 +115,20 @@
         '<div class="rside"><span class="budget">' + it.budget + '</span><a class="btn btn-ghost" href="' + d + '">Détails</a></div></article>';
     }
     // offre (chantier / sous-traitance)
-    // « Répondre » sur une annonce réelle : mailto si connecté et email connu,
-    // sinon invitation à créer un compte / se connecter.
+    // « Contacter » sur une annonce réelle : messagerie interne avec le
+    // propriétaire du chantier (sans exposer ses coordonnées). Sinon invitation
+    // à créer un compte / se connecter.
     var repHref, repLabel = 'Répondre';
     if (real) {
-      if (loggedIn && it.contact_email) repHref = 'mailto:' + it.contact_email;
-      else if (loggedIn) repHref = '../espace/index.html';
-      else { repHref = '../compte/index.html'; repLabel = 'Se connecter pour répondre'; }
+      if (loggedIn && it.owner && String(it.owner) !== String(currentUserId)) {
+        repHref = '../messages/index.html?to=' + encodeURIComponent(it.owner) +
+          (it._id ? '&chantier=' + encodeURIComponent(it._id) : '');
+        repLabel = 'Contacter';
+      } else if (loggedIn) {
+        repHref = '../espace/index.html';   // son propre chantier / propriétaire inconnu
+      } else {
+        repHref = '../compte/index.html'; repLabel = 'Se connecter pour répondre';
+      }
     } else {
       repHref = d;
     }
@@ -170,8 +190,12 @@
       loader = window.BLDB.listArtisans(opts);
     }
 
-    // État de connexion (pour le bouton « Répondre »).
-    window.BLDB.session().then(function (u) { loggedIn = !!u; if (realItems.length) render(); }).catch(function () {});
+    // État de connexion (pour le bouton « Contacter »).
+    window.BLDB.session().then(function (u) {
+      loggedIn = !!u;
+      currentUserId = u ? u.id : null;
+      if (realItems.length) render();
+    }).catch(function () {});
 
     if (loader) {
       loader.then(function (rows) {
