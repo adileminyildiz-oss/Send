@@ -78,6 +78,11 @@
 
   .loading{text-align:center;color:var(--muted);padding:60px 20px;font-size:14.5px}
 
+  /* Badge « messages non lus » */
+  .unread-badge{font-family:var(--mono);font-size:12px;font-weight:700;min-width:22px;height:22px;padding:0 7px;
+    border-radius:999px;display:inline-flex;align-items:center;justify-content:center;color:var(--hi-ink);
+    background:linear-gradient(150deg,var(--hi),var(--hi-2));vertical-align:middle}
+
   @media (max-width:720px){ .stats{grid-template-columns:1fr} .profgrid{grid-template-columns:1fr} }
 </style>
 </head>
@@ -144,6 +149,16 @@
           <span id="userEmail"></span>
         </div>
         <button class="btn btn-ghost" id="logout">Se déconnecter</button>
+      </div>
+
+      <!-- Messagerie -->
+      <div class="panel" id="msgPanel">
+        <div class="panel-head"><h2><span class="e">💬</span> Messagerie
+          <span class="unread-badge" id="msgBadge" hidden>0</span>
+        </h2>
+          <a class="btn btn-hi" href="../messages/index.html">Ouvrir ma messagerie</a>
+        </div>
+        <p id="msgText" style="color:var(--muted);font-size:14.5px">Échangez avec les autres professionnels à propos d'un chantier, sans dévoiler vos coordonnées.</p>
       </div>
 
       <!-- 1. Cartes de synthèse -->
@@ -292,6 +307,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../assets/js/config.js"></script>
 <script src="../assets/js/db.js"></script>
+<script src="../assets/js/messagerie.js"></script>
 <script src="../assets/js/docs.js"></script>
 <script src="../assets/js/demandes.js"></script>
 <script src="../assets/js/gestion.js"></script>
@@ -371,6 +387,27 @@
       if (sd) { sd.textContent = '0'; sd.className = 'num'; }
       if (cs) cs.textContent = 'Aucune demande pour l\'instant.';
     });
+  }
+
+  // --- Messagerie : nombre de messages non lus (Supabase via BLMsg) ---
+  function renderMessagerie() {
+    var badge = $('msgBadge'), txt = $('msgText');
+    if (!(window.BLMsg && window.BLMsg.ready)) {
+      if (badge) badge.hidden = true;
+      return;
+    }
+    window.BLMsg.unreadCount().then(function (n) {
+      n = (typeof n === 'number' && n > 0) ? n : 0;
+      if (badge) {
+        if (n > 0) { badge.hidden = false; badge.textContent = (n > 99 ? '99+' : n); }
+        else { badge.hidden = true; }
+      }
+      if (txt) {
+        txt.innerHTML = n > 0
+          ? 'Vous avez <b style="color:var(--text)">' + n + '</b> message(s) non lu(s). Ouvrez votre messagerie pour répondre.'
+          : 'Échangez avec les autres professionnels à propos d\'un chantier, sans dévoiler vos coordonnées.';
+      }
+    }).catch(function () { if (badge) badge.hidden = true; });
   }
 
   // --- Rendu des favoris ---
@@ -682,6 +719,7 @@
     $('ava').textContent = initial;
     loadProfile(user.id);
     renderStats(user.id);
+    renderMessagerie();
     renderDemandes();
     renderFavoris();
     renderDepots();
