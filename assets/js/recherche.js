@@ -96,6 +96,7 @@
         '<div class="ric">' + it.e + '</div>' +
         '<div class="rmain"><div class="rtop"><h3>' + titre + '</h3>' +
           realTag +
+          ((real && it.verifie) ? '<span class="pill" style="color:var(--ok);border-color:color-mix(in srgb,var(--ok) 35%,transparent);font-weight:700" title="Entreprise vérifiée">✓ Vérifié</span>' : '') +
           (it.badge ? '<span class="pill ok">' + it.badge + '</span>' : '') +
           '<span class="pill">' + it.metier + '</span></div>' +
         '<div class="rdesc">' + it.desc + '</div>' +

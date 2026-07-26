@@ -23,6 +23,7 @@
   .promain .tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
   .pill{font-size:12px;font-weight:600;padding:3px 11px;border-radius:999px;border:1px solid var(--line-2);color:var(--muted);white-space:nowrap}
   .pill.hi{color:var(--hi-ink);background:var(--hi);border-color:transparent}
+  .pill.verif{color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,transparent);border-color:color-mix(in srgb,var(--ok) 32%,transparent);font-weight:700}
   .prometa{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;color:var(--muted-2);font-size:13.5px}
   .prometa a{color:var(--hi);font-weight:600;text-decoration:none}
   .probio{margin-top:18px;color:var(--muted);font-size:14.5px;line-height:1.6}
@@ -286,15 +287,17 @@
     $('proAv').textContent = metierEmoji(profile.metier);
     $('proNom').textContent = nom;
 
-    // Étiquettes (rôle / métier)
+    // Étiquettes (rôle / métier / vérification)
     var tags = '';
+    if (profile.siret_verifie) tags += '<span class="pill verif" title="Entreprise vérifiée via l\'annuaire officiel des entreprises">✓ Entreprise vérifiée</span>';
     if (profile.role === 'sous-traitant') tags += '<span class="pill hi">Sous-traitant</span>';
     if (profile.metier) tags += '<span class="pill">' + esc(profile.metier) + '</span>';
     $('proTags').innerHTML = tags;
 
-    // Métadonnées (ville, site)
+    // Métadonnées (ville, site, dénomination officielle si vérifiée)
     var meta = [];
     if (profile.ville) meta.push('📍 <b>' + esc(profile.ville) + '</b>');
+    if (profile.siret_verifie && profile.denomination) meta.push('🏢 ' + esc(profile.denomination));
     var sh = siteHref(profile.site);
     if (sh) meta.push('🔗 <a href="' + esc(sh) + '" target="_blank" rel="noopener nofollow">' + esc(profile.site) + '</a>');
     $('proMeta').innerHTML = meta.join('');
