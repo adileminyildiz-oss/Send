@@ -97,7 +97,10 @@
       _real: true,
       _id: row.id || null,
       email: row.email || '',
-      telephone: row.telephone || ''
+      telephone: row.telephone || '',
+      // Vérification d'entreprise (SIRET) — facultative.
+      verifie: !!row.siret_verifie,
+      denomination: row.denomination || ''
     };
   }
 
@@ -219,6 +222,15 @@
         site: obj.site || null,
         updated_at: new Date().toISOString()
       };
+      // Vérification d'entreprise (SIRET) : on ne touche à ces colonnes que si
+      // elles sont fournies, pour ne pas écraser une vérification existante lors
+      // d'un simple enregistrement du reste du profil.
+      if (obj.siret !== undefined && obj.siret !== null) row.siret = obj.siret || null;
+      if (obj.siret_verifie !== undefined) {
+        row.siret_verifie = !!obj.siret_verifie;
+        if (obj.siret_verifie) row.verifie_le = new Date().toISOString();
+      }
+      if (obj.denomination !== undefined && obj.denomination !== null) row.denomination = obj.denomination || null;
       return client.from('profiles').upsert(row, { onConflict: 'id' }).select().single().then(function (res) {
         if (!res || res.error || !res.data) return null;
         return res.data;

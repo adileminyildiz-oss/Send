@@ -46,6 +46,18 @@
   .save-ok{display:none;margin-top:14px;text-align:center;padding:11px;border-radius:11px;font-weight:600;
     background:color-mix(in srgb,var(--ok) 12%,transparent);border:1px solid color-mix(in srgb,var(--ok) 30%,transparent);color:var(--ok)}
 
+  /* Vérification d'entreprise (SIRET) */
+  .siret-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start}
+  .siret-row input{flex:1;min-width:200px}
+  .verif-chip{display:none;align-items:center;gap:6px;margin-top:10px;font-size:13px;font-weight:650;
+    padding:5px 12px;border-radius:999px;width:max-content;max-width:100%;color:var(--ok);
+    background:color-mix(in srgb,var(--ok) 12%,transparent);border:1px solid color-mix(in srgb,var(--ok) 32%,transparent)}
+  .verif-msg{display:none;margin-top:10px;font-size:13.5px;line-height:1.55;color:var(--muted);
+    border:1px solid var(--line);border-radius:11px;background:var(--surface-2);padding:11px 14px}
+  .verif-msg.ok{color:var(--text);border-color:color-mix(in srgb,var(--ok) 30%,transparent);background:color-mix(in srgb,var(--ok) 8%,transparent)}
+  .verif-msg.err{color:var(--neg);border-color:color-mix(in srgb,var(--neg) 30%,transparent);background:color-mix(in srgb,var(--neg) 8%,transparent)}
+  .verif-msg b{color:var(--text)}
+
   /* Listes favoris / dépôts */
   .tools{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
   .tool{display:flex;align-items:center;gap:10px;padding:13px 14px;border:1px solid var(--line);border-radius:12px;
@@ -167,6 +179,7 @@
           <a class="tool" href="../aides/index.html"><span class="e">💶</span> Aides</a>
           <a class="tool" href="../devis/index.html"><span class="e">🧾</span> Devis</a>
           <a class="tool" href="../situations/index.html"><span class="e">📐</span> Situations</a>
+          <a class="tool" href="../dc4/index.html"><span class="e">📝</span> DC4 sous-traitance</a>
           <a class="tool" href="../gestion/index.html"><span class="e">📊</span> Gestion</a>
           <a class="tool" href="../conformite/index.html"><span class="e">📄</span> Documents</a>
           <a class="tool" href="../messages/index.html"><span class="e">💬</span> Messagerie</a>
@@ -253,6 +266,15 @@
               <label for="pf_desc">Description de votre activité</label>
               <textarea id="pf_desc" placeholder="Présentez votre entreprise, vos spécialités, vos certifications…"></textarea>
             </div>
+            <div class="field full" id="siretField" style="margin:0" hidden>
+              <label for="pf_siret">SIRET de l'entreprise <span style="color:var(--muted-2);font-weight:400">— vérification officielle (facultatif)</span></label>
+              <div class="siret-row">
+                <input id="pf_siret" type="text" inputmode="numeric" autocomplete="off" placeholder="14 chiffres — ex : 123 456 789 00012">
+                <button type="button" class="btn btn-ghost" id="pf_verif_btn">Vérifier mon entreprise</button>
+              </div>
+              <div class="verif-chip" id="pf_verif_chip">✓ Entreprise vérifiée</div>
+              <div class="verif-msg" id="pf_verif_msg"></div>
+            </div>
           </div>
           <div style="display:flex;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap">
             <button type="submit" class="btn btn-hi">Enregistrer</button>
@@ -330,6 +352,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../assets/js/config.js"></script>
 <script src="../assets/js/db.js"></script>
+<script src="../assets/js/verify.js"></script>
 <script src="../assets/js/messagerie.js"></script>
 <script src="../assets/js/docs.js"></script>
 <script src="../assets/js/demandes.js"></script>
@@ -614,6 +637,20 @@
 
   // --- Profil pro (par utilisateur) ---
   function profileKey(userId) { return 'batilink_profil_' + userId; }
+
+  // État de vérification d'entreprise pour le formulaire courant.
+  var verifState = { verified: false, siret: '', denomination: '' };
+  function onlyDigits(s) { return String(s == null ? '' : s).replace(/\D/g, ''); }
+
+  // Peint la puce « vérifiée » selon l'état courant du champ SIRET.
+  function paintVerifChip() {
+    var chip = $('pf_verif_chip');
+    if (!chip) return;
+    var typed = onlyDigits($('pf_siret') ? $('pf_siret').value : '');
+    var ok = verifState.verified && typed && typed === verifState.siret;
+    chip.style.display = ok ? 'inline-flex' : 'none';
+  }
+
   function fillProfile(p) {
     if (!p || typeof p !== 'object') p = {};
     $('pf_ent').value = p.entreprise || '';
@@ -621,6 +658,11 @@
     $('pf_zone').value = p.zone || '';
     $('pf_tel').value = p.tel || '';
     $('pf_desc').value = p.description || '';
+    if ($('pf_siret')) $('pf_siret').value = p.siret || '';
+    verifState.verified = !!p.verifie;
+    verifState.siret = onlyDigits(p.siret || '');
+    verifState.denomination = p.denomination || '';
+    paintVerifChip();
   }
   function loadProfile(userId) {
     // 1) Repli immédiat sur le cache local (affichage instantané).
@@ -631,15 +673,79 @@
         if (!row) return;
         var mapped = {
           entreprise: row.nom || '', metier: row.metier || '',
-          zone: row.ville || '', tel: row.telephone || '', description: row.bio || ''
+          zone: row.ville || '', tel: row.telephone || '', description: row.bio || '',
+          siret: row.siret || '', verifie: !!row.siret_verifie, denomination: row.denomination || ''
         };
         fillProfile(mapped);
         writeJSON(profileKey(userId), mapped);
       }).catch(function () {});
     }
   }
+
+  // Vérification d'entreprise (API publique gratuite via window.BLVerify).
+  function bindVerify() {
+    var field = $('siretField'), btn = $('pf_verif_btn'), input = $('pf_siret'), msg = $('pf_verif_msg');
+    if (!field || !btn || !input) return;
+    // Fonctionne seulement si BLVerify est chargé — sinon on masque la section.
+    if (!window.BLVerify || typeof window.BLVerify.lookup !== 'function') { field.hidden = true; return; }
+    field.hidden = false;
+
+    function showMsg(text, cls) {
+      if (!msg) return;
+      msg.className = 'verif-msg' + (cls ? ' ' + cls : '');
+      msg.innerHTML = text;
+      msg.style.display = 'block';
+    }
+    // Si l'utilisateur modifie le SIRET, la puce « vérifiée » ne s'applique plus.
+    input.addEventListener('input', paintVerifChip);
+
+    btn.addEventListener('click', function () {
+      var q = (input.value || '').trim();
+      if (!q) { showMsg('Saisissez d\'abord le SIRET (ou le SIREN) de votre entreprise.', 'err'); return; }
+      var old = btn.textContent;
+      btn.disabled = true; btn.textContent = 'Vérification…';
+      window.BLVerify.lookup(q).then(function (r) {
+        btn.disabled = false; btn.textContent = old;
+        if (!r || (!r.siret && !r.siren)) {
+          showMsg('Entreprise introuvable ou service indisponible — réessayez plus tard. Vous pouvez enregistrer le reste de votre profil normalement.', 'err');
+          return;
+        }
+        // Succès : on affiche les informations officielles et on marque « vérifié ».
+        var siret = r.siret || onlyDigits(q);
+        if (r.siret) input.value = r.siret;
+        verifState.verified = true;
+        verifState.siret = onlyDigits(siret);
+        verifState.denomination = r.denomination || '';
+        paintVerifChip();
+        var lines = [];
+        lines.push('<b>' + esc(r.denomination || 'Entreprise') + '</b>');
+        if (r.adresse) lines.push(esc(r.adresse));
+        var extra = [];
+        if (r.siret) extra.push('SIRET ' + esc(r.siret));
+        if (r.activite) extra.push(esc(r.activite));
+        if (r.etat) extra.push('État : ' + esc(r.etat));
+        if (extra.length) lines.push('<span style="color:var(--muted-2)">' + extra.join(' · ') + '</span>');
+        showMsg('✓ ' + lines.join('<br>'), 'ok');
+        // Pré-remplit le nom d'entreprise s'il est vide.
+        if (!$('pf_ent').value.trim() && r.denomination) $('pf_ent').value = r.denomination;
+        // Persiste immédiatement la vérification (sans bloquer si la base est absente).
+        if (window.BLDB && window.BLDB.ready) {
+          window.BLDB.saveProfile({
+            siret: verifState.siret,
+            siret_verifie: true,
+            denomination: verifState.denomination
+          }).catch(function () {});
+        }
+      }).catch(function () {
+        btn.disabled = false; btn.textContent = old;
+        showMsg('Entreprise introuvable ou service indisponible — réessayez plus tard. Vous pouvez enregistrer le reste de votre profil normalement.', 'err');
+      });
+    });
+  }
+
   function bindProfile(userId) {
     var form = $('profForm');
+    bindVerify();
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       var local = {
@@ -649,6 +755,12 @@
         tel: $('pf_tel').value.trim(),
         description: $('pf_desc').value.trim()
       };
+      // Cache local : inclut aussi l'état de vérification.
+      var typedSiret = onlyDigits($('pf_siret') ? $('pf_siret').value : '');
+      var stillVerified = verifState.verified && typedSiret && typedSiret === verifState.siret;
+      local.siret = typedSiret;
+      local.verifie = stillVerified;
+      local.denomination = stillVerified ? verifState.denomination : '';
       // Toujours écrire le cache local (repli hors ligne / base absente).
       writeJSON(profileKey(userId), local);
       // Upsert en base si disponible.
@@ -659,9 +771,13 @@
           metier: local.metier,
           ville: local.zone,
           telephone: local.tel,
-          bio: local.description
+          bio: local.description,
+          siret: typedSiret,
+          siret_verifie: stillVerified,
+          denomination: stillVerified ? verifState.denomination : ''
         }).catch(function () {});
       }
+      paintVerifChip();
       var ok = $('profOk');
       ok.style.display = 'block';
       clearTimeout(bindProfile._t);
