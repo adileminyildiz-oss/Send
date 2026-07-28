@@ -1,6 +1,39 @@
 // BâtiLink — comportements partagés (thème, menu mobile, reveal, recherche accueil).
 'use strict';
 
+// PWA : manifest + couleur de thème injectés partout, et enregistrement du service worker.
+(function () {
+  try {
+    var head = document.head;
+    if (head && !document.querySelector('link[rel="manifest"]')) {
+      var m = document.createElement('link'); m.rel = 'manifest'; m.href = '/manifest.json'; head.appendChild(m);
+    }
+    if (head && !document.querySelector('meta[name="theme-color"]')) {
+      var t = document.createElement('meta'); t.name = 'theme-color'; t.content = '#0f1115'; head.appendChild(t);
+    }
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js').catch(function () {});
+      });
+    }
+  } catch (e) {}
+})();
+
+// Accessibilité : lien d'évitement « Aller au contenu » injecté en tête de page.
+(function () {
+  try {
+    if (document.querySelector('.skip-link')) return;
+    var target = document.querySelector('main') || document.querySelector('section');
+    if (!target) return;
+    if (!target.id) target.id = 'contenu';
+    var a = document.createElement('a');
+    a.href = '#' + target.id;
+    a.className = 'skip-link';
+    a.textContent = 'Aller au contenu';
+    if (document.body) document.body.insertBefore(a, document.body.firstChild);
+  } catch (e) {}
+})();
+
 // Thème clair / sombre
 (function () {
   var root = document.documentElement;
