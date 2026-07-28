@@ -66,6 +66,66 @@ window.BLFav = (function () {
   };
 })();
 
+// En-tête conscient de la session : distingue l'état CONNECTÉ de l'état PUBLIC.
+// Détecte le jeton Supabase stocké localement (fonctionne même sans supabase-js).
+(function () {
+  function sessionUser() {
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (!/^sb-.*-auth-token$/.test(k)) continue;
+        var raw = localStorage.getItem(k); if (!raw) continue;
+        var v = JSON.parse(raw);
+        var s = (v && v.access_token) ? v : (v && v.currentSession) ? v.currentSession : null;
+        if (!s || !s.access_token) continue;
+        if (s.expires_at && (s.expires_at * 1000) < Date.now()) continue; // session expirée
+        return (s.user && s.user.email) ? s.user.email : true;
+      }
+    } catch (e) {}
+    return null;
+  }
+  function clearSession() {
+    try {
+      var keys = [];
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (/^sb-.*-auth-token$/.test(k)) keys.push(k);
+      }
+      keys.forEach(function (k) { localStorage.removeItem(k); });
+    } catch (e) {}
+  }
+
+  var user = sessionUser();
+  var root = document.documentElement;
+  if (!user) { root.classList.add('is-guest'); return; } // état public : on ne change rien
+  root.classList.add('is-auth');
+
+  // « Connexion » / « Mon compte » -> « Mon espace » (chemins absolus, valides partout)
+  document.querySelectorAll('a[href*="compte/index.html"], a[href$="/compte/"]').forEach(function (a) {
+    a.setAttribute('href', '/espace/index.html');
+    if (/connexion|mon compte|se connecter|inscription/i.test(a.textContent)) a.textContent = 'Mon espace';
+  });
+
+  // Bouton Déconnexion dans la barre de droite de l'en-tête
+  var right = document.querySelector('header.site .right');
+  if (right && !right.querySelector('[data-logout]')) {
+    var btn = document.createElement('button');
+    btn.className = 'btn btn-ghost';
+    btn.type = 'button';
+    btn.setAttribute('data-logout', '');
+    btn.textContent = 'Déconnexion';
+    var burger = right.querySelector('#burger');
+    if (burger) right.insertBefore(btn, burger); else right.appendChild(btn);
+    btn.addEventListener('click', function () {
+      if (window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
+        try { window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY).auth.signOut(); } catch (e) {}
+      }
+      clearSession();
+      window.location.href = '/index.html';
+    });
+  }
+})();
+
 // Recherche de l'accueil : onglets + redirection vers la page de résultats
 (function () {
   var tabs = document.getElementById('tabs');
