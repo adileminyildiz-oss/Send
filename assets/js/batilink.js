@@ -95,34 +95,94 @@ window.BLFav = (function () {
     } catch (e) {}
   }
 
+  function doLogout() {
+    if (window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
+      try { window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY).auth.signOut(); } catch (e) {}
+    }
+    clearSession();
+    window.location.href = '/index.html';
+  }
+
   var user = sessionUser();
   var root = document.documentElement;
   if (!user) { root.classList.add('is-guest'); return; } // état public : on ne change rien
   root.classList.add('is-auth');
 
-  // « Connexion » / « Mon compte » -> « Mon espace » (chemins absolus, valides partout)
+  var right = document.querySelector('header.site .right');
+
+  // « Connexion » / « Mon compte » -> « Mon espace » (chemins absolus, valides partout).
+  // Le lien de compte situé dans la barre de droite devient le menu déroulant ci-dessous.
   document.querySelectorAll('a[href*="compte/index.html"], a[href$="/compte/"]').forEach(function (a) {
+    if (right && right.contains(a)) return;
     a.setAttribute('href', '/espace/index.html');
     if (/connexion|mon compte|se connecter|inscription/i.test(a.textContent)) a.textContent = 'Mon espace';
   });
 
-  // Bouton Déconnexion dans la barre de droite de l'en-tête
-  var right = document.querySelector('header.site .right');
-  if (right && !right.querySelector('[data-logout]')) {
+  // Menu déroulant « Mon espace ▾ » dans la barre de droite de l'en-tête.
+  if (right && !right.querySelector('.bl-menu')) {
+    var menu = document.createElement('div');
+    menu.className = 'bl-menu';
+
     var btn = document.createElement('button');
-    btn.className = 'btn btn-ghost';
     btn.type = 'button';
-    btn.setAttribute('data-logout', '');
-    btn.textContent = 'Déconnexion';
-    var burger = right.querySelector('#burger');
-    if (burger) right.insertBefore(btn, burger); else right.appendChild(btn);
-    btn.addEventListener('click', function () {
-      if (window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
-        try { window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY).auth.signOut(); } catch (e) {}
-      }
-      clearSession();
-      window.location.href = '/index.html';
+    btn.className = 'btn btn-ghost bl-menu-btn';
+    btn.setAttribute('aria-haspopup', 'true');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.innerHTML = 'Mon espace <span class="bl-caret" aria-hidden="true">▾</span>';
+
+    var list = document.createElement('div');
+    list.className = 'bl-menu-list';
+    list.setAttribute('role', 'menu');
+
+    var links = [
+      ['Mon espace', '/espace/index.html'],
+      ['Messagerie', '/messages/index.html'],
+      ['Mes devis', '/devis/index.html']
+    ];
+    links.forEach(function (it) {
+      var a = document.createElement('a');
+      a.className = 'bl-menu-item';
+      a.setAttribute('role', 'menuitem');
+      a.href = it[1];
+      a.textContent = it[0];
+      list.appendChild(a);
     });
+
+    var sep = document.createElement('div');
+    sep.className = 'bl-menu-sep';
+    list.appendChild(sep);
+
+    var logout = document.createElement('button');
+    logout.type = 'button';
+    logout.className = 'bl-menu-item bl-menu-logout';
+    logout.setAttribute('role', 'menuitem');
+    logout.setAttribute('data-logout', '');
+    logout.textContent = 'Déconnexion';
+    list.appendChild(logout);
+
+    menu.appendChild(btn);
+    menu.appendChild(list);
+
+    // Retire le lien de compte devenu redondant dans la barre de droite.
+    var acct = right.querySelector('a[href*="compte"], a[href*="espace/index.html"]');
+    if (acct) acct.parentNode.removeChild(acct);
+
+    var burger = right.querySelector('#burger');
+    if (burger) right.insertBefore(menu, burger); else right.appendChild(menu);
+
+    function closeMenu() { menu.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }
+    function openMenu() { menu.classList.add('open'); btn.setAttribute('aria-expanded', 'true'); }
+
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (menu.classList.contains('open')) closeMenu(); else openMenu();
+    });
+    document.addEventListener('click', function (e) { if (!menu.contains(e.target)) closeMenu(); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' || e.keyCode === 27) { closeMenu(); btn.focus(); }
+    });
+
+    logout.addEventListener('click', doLogout);
   }
 })();
 

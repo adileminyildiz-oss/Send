@@ -251,3 +251,28 @@ html:not(.js) .reveal{opacity:1;transform:none}
 .foot-legal{display:flex;gap:14px;flex-wrap:wrap}
 .foot-legal a{color:var(--muted-2);font-size:13px}
 .foot-legal a:hover{color:var(--hi)}
+
+/* En-tête connecté : menu déroulant « Mon espace ▾ » */
+.bl-menu{position:relative;display:inline-flex}
+.bl-menu-btn{gap:6px}
+.bl-menu-btn .bl-caret{font-size:11px;line-height:1;transition:transform .18s}
+.bl-menu.open .bl-menu-btn{background:var(--surface);border-color:var(--muted-2)}
+.bl-menu.open .bl-menu-btn .bl-caret{transform:rotate(180deg)}
+.bl-menu-list{position:absolute;top:calc(100% + 8px);right:0;min-width:210px;display:none;flex-direction:column;gap:2px;
+  padding:6px;border:1px solid var(--line-2);border-radius:12px;background:var(--surface);box-shadow:var(--shadow);z-index:70}
+.bl-menu.open .bl-menu-list{display:flex}
+.bl-menu-item{display:flex;align-items:center;gap:8px;width:100%;padding:9px 12px;border:0;border-radius:8px;
+  font:inherit;font-size:14px;font-weight:550;text-align:left;text-decoration:none;color:var(--text);
+  background:transparent;cursor:pointer;transition:.14s}
+.bl-menu-item:hover,.bl-menu-item:focus-visible{background:var(--surface-2);color:var(--hi)}
+.bl-menu-sep{height:1px;margin:5px 4px;background:var(--line)}
+.bl-menu-logout{color:var(--neg)}
+.bl-menu-logout:hover,.bl-menu-logout:focus-visible{color:var(--neg);background:color-mix(in srgb,var(--neg) 10%,transparent)}
+/* Le menu reste accessible même sur mobile (où les .btn-ghost de l'en-tête sont masqués). */
+.nav .right .bl-menu-btn{display:inline-flex}
+
+/* Bandeau « zone membre » (espace connecté) */
+.member-banner{background:color-mix(in srgb,var(--hi) 12%,transparent);
+  border-bottom:1px solid color-mix(in srgb,var(--hi) 30%,transparent)}
+.member-banner .wrap{display:flex;align-items:center;gap:8px;padding:8px 0;
+  font-family:var(--mono);font-size:12.5px;font-weight:600;letter-spacing:.04em;color:var(--text)}

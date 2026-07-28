@@ -23,9 +23,9 @@
     .auth-sub{text-align:center;color:var(--muted);font-size:14px;margin:0 0 22px}
     .field{margin-bottom:15px}
     .field label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text)}
-    .field input{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;
+    .field input,.field select{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;
       font:inherit;font-size:15px;background:var(--surface-2);color:var(--text)}
-    .field input:focus{outline:2px solid color-mix(in srgb,var(--hi) 40%,transparent);border-color:var(--hi)}
+    .field input:focus,.field select:focus{outline:2px solid color-mix(in srgb,var(--hi) 40%,transparent);border-color:var(--hi)}
     .row-between{display:flex;justify-content:flex-end;margin:-4px 0 16px}
     .row-between a{font-size:13px;color:var(--hi)}
     .msg{font-size:13.5px;padding:11px 13px;border-radius:9px;margin-bottom:14px}
@@ -72,6 +72,15 @@
           <div class="field">
             <label for="password">Mot de passe</label>
             <input id="password" type="password" autocomplete="current-password" required minlength="8" placeholder="••••••••" />
+          </div>
+          <div class="field" id="roleField" hidden>
+            <label for="role">Je suis</label>
+            <select id="role">
+              <option value="artisan">Artisan</option>
+              <option value="sous-traitant">Sous-traitant</option>
+              <option value="donneur-ordre">Donneur d'ordre / maître d'ouvrage</option>
+              <option value="particulier">Particulier</option>
+            </select>
           </div>
           <div class="row-between"><a href="#" id="forgot">Mot de passe oublié ?</a></div>
           <button type="submit" id="submitBtn" class="btn btn-hi" style="width:100%;justify-content:center">Se connecter</button>

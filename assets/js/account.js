@@ -51,8 +51,37 @@
       ? 'Pas encore de compte ? <a href="#" id="toggleLink">Créer un compte</a>'
       : 'Déjà un compte ? <a href="#" id="toggleLink">Se connecter</a>';
     $('title').textContent = m === 'signin' ? 'Espace client' : 'Créer un compte';
+    var rf = $('roleField');
+    if (rf) rf.hidden = (m !== 'signup'); // sélecteur de rôle visible seulement à l'inscription
     bindToggle();
   };
+
+  // Rôle choisi à l'inscription (Artisan / Sous-traitant / Donneur d'ordre / Particulier).
+  function selectedRole() {
+    var el = $('role');
+    return el && el.value ? el.value : '';
+  }
+  // Écrit le rôle dans la table `profiles` (upsert par id). Défensif : n'interrompt jamais le flux.
+  function persistRole(session, role) {
+    if (!session || !session.user || !role) return;
+    try {
+      var p = client.from('profiles').upsert({ id: session.user.id, role: role }, { onConflict: 'id' });
+      if (p && typeof p.then === 'function') p.then(function () {}, function () {});
+    } catch (e) {}
+  }
+  // Si le rôle n'a pas pu être écrit tout de suite (email à confirmer), on le rejoue une fois connecté.
+  function flushPendingRole(session) {
+    if (!session || !session.user) return;
+    var role = null;
+    try { role = localStorage.getItem('batilink_pending_role'); } catch (e) {}
+    if (!role) return;
+    try {
+      var p = client.from('profiles').upsert({ id: session.user.id, role: role }, { onConflict: 'id' });
+      if (p && typeof p.then === 'function') {
+        p.then(function () { try { localStorage.removeItem('batilink_pending_role'); } catch (e) {} }, function () {});
+      }
+    } catch (e) {}
+  }
   function bindToggle() {
     const l = $('toggleLink');
     if (l) l.addEventListener('click', (e) => { e.preventDefault(); setMode(mode === 'signin' ? 'signup' : 'signin'); });
@@ -70,10 +99,17 @@
     btn.textContent = 'Un instant…';
     try {
       if (mode === 'signup') {
+        const role = selectedRole();
         const { data, error } = await client.auth.signUp({ email, password });
         if (error) return showError(frError(error));
-        if (data.session) render(data.session);
-        else showInfo('Compte créé ! Vérifiez votre boîte mail pour confirmer votre adresse, puis connectez-vous.');
+        if (data.session) {
+          if (role) persistRole(data.session, role);
+          render(data.session);
+        } else {
+          // Pas de session (confirmation email requise) : on garde le rôle pour l'écrire plus tard.
+          if (role) { try { localStorage.setItem('batilink_pending_role', role); } catch (e) {} }
+          showInfo('Compte créé ! Vérifiez votre boîte mail pour confirmer votre adresse, puis connectez-vous.');
+        }
       } else {
         const { data, error } = await client.auth.signInWithPassword({ email, password });
         if (error) return showError(frError(error));
@@ -109,6 +145,7 @@
       authView.hidden = true;
       spaceView.hidden = false;
       $('userEmail').textContent = session.user.email || '';
+      flushPendingRole(session); // rejoue le rôle en attente (après confirmation d'email)
     } else {
       spaceView.hidden = true;
       authView.hidden = false;
