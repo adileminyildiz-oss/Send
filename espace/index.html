@@ -197,6 +197,16 @@
         <p id="msgText" style="color:var(--muted);font-size:14.5px">Échangez avec les autres professionnels à propos d'un chantier, sans dévoiler vos coordonnées.</p>
       </div>
 
+      <!-- Mes candidatures -->
+      <div class="panel" id="candPanel">
+        <div class="panel-head"><h2><span class="e">✋</span> Mes candidatures
+          <span class="unread-badge" id="candBadge" hidden>0</span>
+        </h2>
+          <a class="btn btn-ghost" href="../recherche/index.html?type=chantiers">Trouver un chantier</a>
+        </div>
+        <div id="candList" class="mini-list"></div>
+      </div>
+
       <!-- 1. Cartes de synthèse -->
       <div class="stats">
         <div class="stat">
@@ -354,6 +364,7 @@
 <script src="../assets/js/db.js"></script>
 <script src="../assets/js/verify.js"></script>
 <script src="../assets/js/messagerie.js"></script>
+<script src="../assets/js/candidatures.js"></script>
 <script src="../assets/js/docs.js"></script>
 <script src="../assets/js/demandes.js"></script>
 <script src="../assets/js/gestion.js"></script>
@@ -454,6 +465,67 @@
           : 'Échangez avec les autres professionnels à propos d\'un chantier, sans dévoiler vos coordonnées.';
       }
     }).catch(function () { if (badge) badge.hidden = true; });
+  }
+
+  // --- Mes candidatures (Supabase via BLCand) ---
+  var CAND_STATUTS = {
+    envoyee: { label: 'Envoyée', cls: '' },
+    acceptee: { label: 'Acceptée', cls: 'okc' },
+    refusee: { label: 'Refusée', cls: 'negc' }
+  };
+  function candStatutBadge(s) {
+    var st = CAND_STATUTS[s] || CAND_STATUTS.envoyee;
+    var style = 'font-size:11.5px;font-weight:650;padding:3px 10px;border-radius:999px;border:1px solid var(--line-2);';
+    if (st.cls === 'okc') style += 'color:var(--ok);border-color:color-mix(in srgb,var(--ok) 35%,transparent);background:color-mix(in srgb,var(--ok) 10%,transparent)';
+    else if (st.cls === 'negc') style += 'color:var(--neg);border-color:color-mix(in srgb,var(--neg) 35%,transparent);background:color-mix(in srgb,var(--neg) 10%,transparent)';
+    else style += 'color:var(--hi);border-color:color-mix(in srgb,var(--hi) 40%,transparent);background:color-mix(in srgb,var(--hi) 12%,transparent)';
+    return '<span style="' + style + '">' + st.label + '</span>';
+  }
+  function renderCandidatures() {
+    var wrap = $('candList'), badge = $('candBadge');
+    if (!wrap) return;
+    if (!(window.BLCand && window.BLCand.ready)) {
+      if (badge) badge.hidden = true;
+      wrap.innerHTML = '<div class="empty-mini">Répondez à un chantier pour suivre vos candidatures ici. ' +
+        '<a class="hilink" href="../recherche/index.html?type=chantiers">Explorer les chantiers</a>.</div>';
+      return;
+    }
+    wrap.innerHTML = '<div class="empty-mini">Chargement…</div>';
+    window.BLCand.listMine().then(function (rows) {
+      if (!Array.isArray(rows)) rows = [];
+      if (badge) {
+        if (rows.length) { badge.hidden = false; badge.textContent = (rows.length > 99 ? '99+' : rows.length); }
+        else badge.hidden = true;
+      }
+      if (!rows.length) {
+        wrap.innerHTML = '<div class="empty-mini">Vous n\'avez pas encore postulé à un chantier. ' +
+          '<a class="hilink" href="../recherche/index.html?type=chantiers">Trouvez un chantier</a> et répondez-y en quelques secondes.</div>';
+        return;
+      }
+      wrap.innerHTML = rows.map(function (r) {
+        r = r || {};
+        var ch = r._chantier || {};
+        var titre = ch.titre || 'Chantier';
+        var href = '../chantier/index.html?id=' + encodeURIComponent(r.chantier_id || '');
+        var meta = [];
+        if (ch.metier) meta.push('<b>' + esc(ch.metier) + '</b>');
+        if (ch.ville) meta.push(esc(ch.ville));
+        if (r.created_at) meta.push(new Date(r.created_at).toLocaleDateString('fr-FR'));
+        return '<div class="mini">' +
+          '<div class="ic">✋</div>' +
+          '<div class="mmain">' +
+            '<h3><a href="' + href + '">' + esc(titre) + '</a></h3>' +
+            (meta.length ? '<div class="mmeta">' + meta.join('<span>·</span>') + '</div>' : '') +
+          '</div>' +
+          '<div class="mside">' + candStatutBadge(r.statut) +
+            '<a class="btn btn-ghost" style="padding:7px 12px;font-size:13px" href="' + href + '">Voir</a>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }).catch(function () {
+      if (badge) badge.hidden = true;
+      wrap.innerHTML = '<div class="empty-mini">Vos candidatures ne sont pas disponibles pour le moment.</div>';
+    });
   }
 
   // --- Rendu des favoris ---
@@ -860,6 +932,7 @@
     loadProfile(user.id);
     renderStats(user.id);
     renderMessagerie();
+    renderCandidatures();
     renderDemandes();
     renderFavoris();
     renderDepots();

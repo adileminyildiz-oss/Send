@@ -178,6 +178,41 @@
     }).catch(function () { return []; });
   };
 
+  // Fiche brute d'un chantier par son identifiant (avec `owner`). Lecture
+  // publique (aucune session requise), comme la liste des chantiers. Renvoie la
+  // ligne complète ou null, ne « throw » jamais.
+  BLDB.getChantierById = function (id) {
+    if (!client || !id) return nullVal();
+    try {
+      return client.from('chantiers').select('*').eq('id', id).maybeSingle().then(function (res) {
+        if (!res || res.error || !res.data) return null;
+        return res.data;
+      }).catch(function () { return null; });
+    } catch (e) { return nullVal(); }
+  };
+
+  // Nombre total de candidatures d'un chantier (leads plafonnés). Utilise la
+  // fonction SECURITY DEFINER bl_candidature_count si disponible, sinon retombe
+  // sur un comptage des lignes visibles. Renvoie 0 sur toute erreur.
+  // NB : window.BLCand.countFor fournit la même information ; ce helper existe
+  // pour les pages qui n'utilisent que BLDB.
+  BLDB.candidatureCount = function (chantierId) {
+    if (!client || !chantierId) return Promise.resolve(0);
+    try {
+      return client.rpc('bl_candidature_count', { p_chantier: chantierId })
+        .then(function (res) {
+          if (res && !res.error && typeof res.data === 'number') return res.data;
+          return client.from('candidatures')
+            .select('id', { count: 'exact', head: true })
+            .eq('chantier_id', chantierId)
+            .then(function (r2) {
+              if (!r2 || r2.error) return 0;
+              return (typeof r2.count === 'number') ? r2.count : 0;
+            }).catch(function () { return 0; });
+        }).catch(function () { return 0; });
+    } catch (e) { return Promise.resolve(0); }
+  };
+
   // Profil de l'utilisateur courant ou null.
   BLDB.getProfile = function () {
     if (!client) return nullVal();
