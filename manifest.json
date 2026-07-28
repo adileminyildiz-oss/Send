@@ -1,0 +1,14 @@
+{
+  "name": "BâtiLink — la plateforme du bâtiment",
+  "short_name": "BâtiLink",
+  "description": "Mise en relation, appels d'offres, aides et gestion pour les professionnels du bâtiment.",
+  "start_url": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0f1115",
+  "theme_color": "#0f1115",
+  "lang": "fr",
+  "icons": [
+    { "src": "/assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
