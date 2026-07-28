@@ -50,6 +50,39 @@
 .cat span{font-size:12px;color:var(--muted)}
 .cat .pz{font-family:var(--mono);font-size:12px;color:var(--hi);font-weight:600}
 
+/* ---- Sélecteur « Bibliothèque de prix » (modale) ---- */
+.blp-overlay{position:fixed;inset:0;z-index:120;background:rgba(6,12,20,.62);display:none;align-items:flex-start;justify-content:center;
+  padding:5vh 18px 18px;overflow:auto}
+.blp-overlay.open{display:flex}
+.blp-modal{background:var(--surface);border:1px solid var(--line-2);border-radius:16px;width:min(760px,100%);
+  box-shadow:var(--shadow);display:flex;flex-direction:column;max-height:88vh}
+.blp-head{display:flex;align-items:center;gap:12px;padding:18px 20px;border-bottom:1px solid var(--line)}
+.blp-head h3{font-size:16px;font-weight:750;letter-spacing:-.01em;flex:1}
+.blp-close{width:32px;height:32px;padding:0;border:1px solid var(--line-2);background:transparent;color:var(--muted);
+  border-radius:8px;cursor:pointer;font-size:18px;line-height:1;display:grid;place-items:center}
+.blp-close:hover{color:var(--text);border-color:var(--muted-2)}
+.blp-tools{display:flex;flex-wrap:wrap;gap:10px;padding:14px 20px 4px}
+.blp-tools input,.blp-tools select{padding:9px 12px;border:1px solid var(--line);border-radius:9px;font:inherit;font-size:13.5px;
+  background:var(--surface-2);color:var(--text)}
+.blp-tools input{flex:1 1 220px}
+.blp-tools select{flex:0 1 200px}
+.blp-tools input:focus,.blp-tools select:focus{outline:2px solid color-mix(in srgb,var(--hi) 40%,transparent);border-color:var(--hi)}
+.blp-note{padding:2px 20px 10px;font-size:12px;color:var(--muted-2)}
+.blp-list{overflow-y:auto;padding:4px 12px 12px;flex:1}
+.blp-item{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:11px 12px;border:1px solid transparent;
+  border-radius:10px;background:transparent;cursor:pointer;font-family:inherit;color:var(--text);transition:.12s}
+.blp-item:hover{background:var(--surface-2);border-color:var(--line)}
+.blp-item .d{flex:1;min-width:0}
+.blp-item .d b{display:block;font-size:13.5px;font-weight:600}
+.blp-item .d span{font-size:12px;color:var(--muted)}
+.blp-item .tag{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 8px;white-space:nowrap}
+.blp-item .tag.perso{color:var(--hi);border-color:color-mix(in srgb,var(--hi) 45%,var(--line))}
+.blp-item .pz{font-family:var(--mono);font-size:12.5px;font-weight:650;color:var(--hi);white-space:nowrap}
+.blp-empty{padding:22px;text-align:center;color:var(--muted-2);font-style:italic;font-size:13px}
+.blp-foot{padding:12px 20px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.blp-foot a{color:var(--hi);font-weight:600;font-size:13px}
+.blp-foot .cnt{font-family:var(--mono);font-size:12px;color:var(--muted-2)}
+
 /* ---- Aperçu du devis ---- */
 .preview-wrap{position:sticky;top:86px}
 .doc{background:#fff;color:#141b26;border-radius:14px;border:1px solid var(--line);overflow:hidden;box-shadow:var(--shadow)}
@@ -190,6 +223,7 @@
         </table>
         <div class="lines-actions">
           <button class="btn btn-ghost" id="addRow" type="button">+ Ajouter une ligne</button>
+          <button class="btn btn-ghost" id="btnBiblio" type="button">📚 Bibliothèque de prix</button>
           <div class="field" style="margin:0;display:flex;align-items:center;gap:10px">
             <label for="vat" style="margin:0">Taux de TVA</label>
             <select id="vat" style="width:auto">
@@ -324,6 +358,8 @@ Acompte de 30 % à la commande, solde à la fin des travaux. Prix fermes et non 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../assets/js/config.js"></script>
 <script src="../assets/js/db.js"></script>
+<script src="../assets/js/prix-data.js"></script>
+<script src="../assets/js/prixlib.js"></script>
 <script src="../assets/js/docs.js"></script>
 <script>
 'use strict';
@@ -754,6 +790,173 @@ Acompte de 30 % à la commande, solde à la fin des travaux. Prix fermes et non 
   } else {
     showLoggedOut();
   }
+})();
+</script>
+
+<!-- ============================================================= -->
+<!-- BIBLIOTHÈQUE DE PRIX — sélecteur in-page (modale)              -->
+<!-- Insère une ligne dans le générateur via window.DevisGen.addRow -->
+<!-- Dégrade gracieusement : sans BLPrix, le bouton reste masqué.   -->
+<!-- ============================================================= -->
+<script>
+'use strict';
+(function(){
+  var Gen = window.DevisGen;
+  var BLPrix = window.BLPrix;
+  var btn = document.getElementById('btnBiblio');
+  if(!Gen || !btn) return;                 // le générateur doit exister
+  if(!BLPrix || !BLPrix.catalog){ btn.style.display = 'none'; return; }
+
+  // Unités reconnues par le générateur (voir <select class="f-unit">).
+  var GEN_UNITS = ['u','m²','ml','h','forfait'];
+  function mapUnit(u){
+    if(GEN_UNITS.indexOf(u) !== -1) return u;
+    if(u === 'ens') return 'forfait';        // « ensemble » -> forfait
+    return 'u';
+  }
+
+  var euro = function(n){
+    n = (typeof n === 'number' && isFinite(n)) ? n : 0;
+    return n.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €';
+  };
+  var esc = function(s){
+    return String(s == null ? '' : s).replace(/[&<>"]/g,function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
+    });
+  };
+
+  var perso = []; // lignes perso (si connecté)
+
+  // --- Construction de la modale (DOM) ------------------------------------
+  var overlay = document.createElement('div');
+  overlay.className = 'blp-overlay';
+  overlay.innerHTML =
+    '<div class="blp-modal" role="dialog" aria-modal="true" aria-label="Bibliothèque de prix">'+
+      '<div class="blp-head">'+
+        '<h3>📚 Bibliothèque de prix</h3>'+
+        '<button type="button" class="blp-close" aria-label="Fermer">×</button>'+
+      '</div>'+
+      '<div class="blp-tools">'+
+        '<input type="search" class="blp-q" placeholder="Rechercher un ouvrage…" autocomplete="off">'+
+        '<select class="blp-m"><option value="">Tous les métiers</option></select>'+
+      '</div>'+
+      '<p class="blp-note">Prix unitaires HT indicatifs. Cliquez sur un ouvrage pour l\'ajouter comme nouvelle ligne (quantité&nbsp;: 1, à ajuster).</p>'+
+      '<div class="blp-list"></div>'+
+      '<div class="blp-foot">'+
+        '<span class="cnt"></span>'+
+        '<a href="../bibliotheque/index.html" target="_blank" rel="noopener">Ouvrir la bibliothèque complète →</a>'+
+      '</div>'+
+    '</div>';
+  document.body.appendChild(overlay);
+
+  var listEl  = overlay.querySelector('.blp-list');
+  var qEl     = overlay.querySelector('.blp-q');
+  var mEl     = overlay.querySelector('.blp-m');
+  var cntEl   = overlay.querySelector('.cnt');
+  var closeEl = overlay.querySelector('.blp-close');
+
+  // Remplit le filtre métier.
+  BLPrix.metiers().forEach(function(mt){
+    var o = document.createElement('option');
+    o.value = mt; o.textContent = mt; mEl.appendChild(o);
+  });
+
+  function results(){
+    var q = qEl.value || '', mt = mEl.value || '';
+    var out = [];
+    if(perso.length){
+      var nq = q.trim().toLowerCase();
+      perso.forEach(function(e){
+        if(mt && e.metier !== mt) return;
+        if(nq){
+          var hay = (e.designation + ' ' + e.metier).toLowerCase();
+          if(hay.indexOf(nq) === -1) return;
+        }
+        out.push(e);
+      });
+    }
+    return out.concat(BLPrix.search({ q:q, metier:mt }));
+  }
+
+  var current = [];
+  function renderList(){
+    current = results();
+    cntEl.textContent = current.length + (current.length > 1 ? ' résultats' : ' résultat');
+    if(!current.length){
+      listEl.innerHTML = '<div class="blp-empty">Aucun ouvrage ne correspond.</div>';
+      return;
+    }
+    var html = '';
+    current.forEach(function(e, i){
+      var tag = e._perso
+        ? '<span class="tag perso">Mes prix</span>'
+        : '<span class="tag">'+esc(e.metier)+'</span>';
+      html += '<button type="button" class="blp-item" data-i="'+i+'">'+
+        '<span class="d"><b>'+esc(e.designation)+'</b><span>'+esc(e.unite)+'</span></span>'+
+        tag+
+        '<span class="pz">'+euro(e.pu)+'</span>'+
+      '</button>';
+    });
+    listEl.innerHTML = html;
+  }
+
+  // Insère une entrée dans le générateur.
+  function insert(e){
+    if(!e) return;
+    // Réutilise une éventuelle unique ligne totalement vide.
+    var lines = Gen.readLines();
+    if(lines.length === 1 && lines[0].empty){ Gen.clearRows(); }
+    var tr = Gen.addRow({ des:e.designation, qty:1, unit:mapUnit(e.unite), pu:e.pu });
+    Gen.render();
+    if(tr && tr.scrollIntoView){ tr.scrollIntoView({block:'nearest', behavior:'smooth'}); }
+  }
+
+  listEl.addEventListener('click', function(ev){
+    var it = ev.target.closest ? ev.target.closest('.blp-item') : null;
+    if(!it) return;
+    var i = parseInt(it.getAttribute('data-i'), 10);
+    insert(current[i]);
+    close(); // ferme après insertion (rouvrir pour en ajouter d'autres)
+  });
+
+  // --- Ouverture / fermeture ----------------------------------------------
+  function open(){
+    overlay.classList.add('open');
+    renderList();
+    setTimeout(function(){ try { qEl.focus(); } catch(_){}}, 30);
+    // Charge les lignes perso à la première ouverture (facultatif).
+    if(!open._loaded && BLPrix.listPerso){
+      open._loaded = true;
+      try {
+        BLPrix.listPerso().then(function(list){
+          if(list && list.length){ perso = list; renderList(); }
+        }).catch(function(){});
+      } catch(_){}
+    }
+  }
+  function close(){ overlay.classList.remove('open'); }
+
+  btn.addEventListener('click', open);
+  closeEl.addEventListener('click', close);
+  overlay.addEventListener('click', function(ev){ if(ev.target === overlay) close(); });
+  document.addEventListener('keydown', function(ev){ if(ev.key === 'Escape') close(); });
+  qEl.addEventListener('input', renderList);
+  mEl.addEventListener('change', renderList);
+
+  // --- Reprise des « picks » déposés par la page bibliothèque (?pick=1) ----
+  // Permet aussi le retour depuis une fenêtre ouverte : window.BLPrixApplyPicks.
+  function applyPicks(){
+    var queue = [];
+    try { queue = JSON.parse(localStorage.getItem('bl_prix_picks') || '[]') || []; } catch(_){ queue = []; }
+    if(Object.prototype.toString.call(queue) !== '[object Array]' || !queue.length) return;
+    try { localStorage.removeItem('bl_prix_picks'); } catch(_){}
+    queue.forEach(function(p){
+      if(!p) return;
+      insert({ designation:p.des, unite:p.unit, pu:p.pu });
+    });
+  }
+  window.BLPrixApplyPicks = applyPicks;
+  applyPicks(); // au chargement (retour depuis la bibliothèque)
 })();
 </script>
 </body>
