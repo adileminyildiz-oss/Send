@@ -118,14 +118,19 @@
         '<div class="rside"><span class="budget">' + it.budget + '</span><a class="btn btn-ghost" href="' + d + '">Détails</a></div></article>';
     }
     // offre (chantier / sous-traitance)
-    // « Contacter » sur une annonce réelle : messagerie interne avec le
-    // propriétaire du chantier (sans exposer ses coordonnées). Sinon invitation
-    // à créer un compte / se connecter.
+    // Une annonce RÉELLE renvoie vers sa page détail (chantier/index.html), où
+    // l'artisan peut consulter le chantier ET postuler (candidature plafonnée)
+    // ou contacter le propriétaire via la messagerie interne. Les rangées
+    // d'exemple gardent leur lien detail.html habituel.
     var repHref, repLabel = 'Répondre';
+    var detailHref = null;   // lien « Voir le détail » (annonce réelle)
     if (real) {
-      if (loggedIn && it.owner && String(it.owner) !== String(currentUserId)) {
-        repHref = '../messages/index.html?to=' + encodeURIComponent(it.owner) +
-          (it._id ? '&chantier=' + encodeURIComponent(it._id) : '');
+      if (it._id) {
+        repHref = '../chantier/index.html?id=' + encodeURIComponent(it._id);
+        repLabel = 'Voir / postuler';
+        detailHref = repHref;
+      } else if (loggedIn && it.owner && String(it.owner) !== String(currentUserId)) {
+        repHref = '../messages/index.html?to=' + encodeURIComponent(it.owner);
         repLabel = 'Contacter';
       } else if (loggedIn) {
         repHref = '../espace/index.html';   // son propre chantier / propriétaire inconnu
@@ -135,6 +140,9 @@
     } else {
       repHref = d;
     }
+    var detailLink = detailHref
+      ? '<a href="' + detailHref + '" style="color:var(--hi);font-weight:600">Voir le détail →</a>'
+      : (real ? '' : '<a href="' + d + '" style="color:var(--hi);font-weight:600">Voir le détail →</a>');
     return '<article class="rcard">' +
       '<div class="ric">' + it.e + '</div>' +
       '<div class="rmain"><div class="rtop"><h3>' + titre + '</h3>' +
@@ -143,7 +151,7 @@
         '<span class="pill">' + it.metier + '</span></div>' +
       '<div class="rdesc">' + it.desc + '</div>' +
       '<div class="rmeta"><span>📍 <b>' + it.ville + '</b></span><span>⏱️ ' + it.delai + '</span>' +
-        (real ? '' : '<a href="' + d + '" style="color:var(--hi);font-weight:600">Voir le détail →</a>') + '</div></div>' +
+        detailLink + '</div></div>' +
       '<div class="rside">' + (it.budget ? '<span class="budget">' + it.budget + '</span>' : '') +
         '<a class="btn btn-hi" href="' + repHref + '">' + repLabel + '</a></div></article>';
   }
